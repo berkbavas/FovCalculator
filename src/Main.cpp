@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
         font.setPixelSize(12);
         font.setBold(false);
         qApp->setFont(font);
-        qDebug() << "Font cannot be loaded. Using deafult font:" << qApp->font();
+        qDebug() << "Font cannot be loaded. Using default font:" << qApp->font();
     } else {
         QString family = QFontDatabase::applicationFontFamilies(id).at(0);
         QFont font(family);
