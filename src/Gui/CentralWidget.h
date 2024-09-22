@@ -4,10 +4,7 @@
 #include "Rectangle.h"
 #include "SideViewWidget.h"
 #include "TopViewWidget.h"
-
-#include <Core/Constants.h>
-#include <Core/Controller.h>
-#include <OpenGL/Window3D.h>
+#include "Core/Controller.h"
 
 #include <QDoubleValidator>
 #include <QGridLayout>

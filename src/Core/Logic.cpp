@@ -1,8 +1,9 @@
 #include "Logic.h"
 
-#include <Core/Constants.h>
-#include <Core/Enums.h>
-#include <Dependencies/Eigen/src/Geometry/AngleAxis.h>
+#include "Core/Constants.h"
+#include "Core/Enums.h"
+
+#include "Eigen/src/Geometry/AngleAxis.h"
 
 #include <QtDebug>
 #include <QtMath>
@@ -66,7 +67,7 @@ void Logic::calculate()
             frustum.topVertices[name] = cameraPosition + zNearNorm * frustum.edgeDirections[name];
             Eigen::ParametrizedLine<float, 3> line = Eigen::ParametrizedLine<float, 3>(cameraPosition, frustum.edgeDirections[name]);
             float t = line.intersectionParameter(mGround);
-            if (!isnan(t) && !isinf(t) && 0 < t)
+            if (!std::isnan(t) && !std::isinf(t) && 0 < t)
                 frustum.bottomVertices[name] = line.pointAt(t);
             else
                 frustum.bottomVertices[name] = cameraPosition + zFarNorm * frustum.edgeDirections[name];
@@ -82,7 +83,7 @@ void Logic::calculate()
 
             Eigen::ParametrizedLine<float, 3> line = Eigen::ParametrizedLine<float, 3>(cameraPosition, bisectors[i]);
             float t = line.intersectionParameter(mGround);
-            if (!isnan(t) && !isinf(t) && 0 < t)
+            if (!std::isnan(t) && !std::isinf(t) && 0 < t)
                 bisectors[i] = line.pointAt(t);
             else
                 bisectors[i] = cameraPosition + zFar * bisectors[i];
@@ -105,7 +106,7 @@ void Logic::calculate()
             Eigen::ParametrizedLine<float, 3> line = Eigen::ParametrizedLine<float, 3>(cameraPosition, frustum.edgeDirections[name]);
             float t = line.intersectionParameter(Eigen::Hyperplane<float, 3>(Eigen::Vector3f(0, 0, 1),
                                                                              -mParameters->target.height)); // above z axis means negative offset
-            if (!isnan(t) && !isinf(t) && 0 < t)
+            if (!std::isnan(t) && !std::isinf(t) && 0 < t)
                 target.intersections[name] = line.pointAt(t);
             else
                 target.intersections[name] = cameraPosition + frustum.zFarNorm * frustum.edgeDirections[name];
@@ -123,7 +124,7 @@ void Logic::calculate()
             Eigen::ParametrizedLine<float, 3> line = Eigen::ParametrizedLine<float, 3>(cameraPosition, frustum.edgeDirections[name]);
             float t = line.intersectionParameter(Eigen::Hyperplane<float, 3>(Eigen::Vector3f(0, 0, 1),
                                                                              -lowerBoundaryHeight)); // above z axis means negative offset
-            if (!isnan(t) && !isinf(t) && 0 < t)
+            if (!std::isnan(t) && !std::isinf(t) && 0 < t)
                 lowerBoundary.intersections[name] = line.pointAt(t);
             else
                 lowerBoundary.intersections[name] = cameraPosition + frustum.zFarNorm * frustum.edgeDirections[name];
@@ -276,7 +277,7 @@ QVector<Eigen::Vector3f> Logic::findIntersection(const Eigen::Vector3f &start, c
     Eigen::ParametrizedLine<float, 3> line(start, direction);
     float t = line.intersectionParameter(plane);
 
-    if (isnan(t) || isinf(t))
+    if (std::isnan(t) || std::isinf(t))
         return QVector<Eigen::Vector3f>();
 
     Eigen::Vector3f point = line.pointAt(t);

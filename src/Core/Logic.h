@@ -1,8 +1,8 @@
 #ifndef LOGIC_H
 #define LOGIC_H
 
-#include "Enums.h"
-#include <Dependencies/Eigen/Dense>
+#include "Eigen/Dense"
+
 #include <QVector>
 
 class Logic

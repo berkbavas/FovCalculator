@@ -1,7 +1,6 @@
 #include "TopViewWidget.h"
 
-#include <Core/Constants.h>
-#include <Core/Enums.h>
+#include "Core/Constants.h"
 
 #include <QMouseEvent>
 #include <QPainter>

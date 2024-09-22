@@ -1,7 +1,6 @@
 #include "SideViewWidget.h"
 
-#include <Core/Constants.h>
-#include <Core/Enums.h>
+#include "Core/Constants.h"
 
 #include <QDebug>
 #include <QMouseEvent>

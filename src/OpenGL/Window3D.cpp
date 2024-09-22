@@ -1,5 +1,7 @@
 #include "Window3D.h"
 
+#include "Core/Constants.h"
+
 #include <QKeyEvent>
 #include <QMouseEvent>
 
@@ -107,8 +109,6 @@ void Window3D::paintGL()
     mNodeManager->setProjection(mProjectionMatrix);
     mNodeManager->render();
 }
-
-void Window3D::resizeGL(int w, int h) {}
 
 void Window3D::refresh()
 {

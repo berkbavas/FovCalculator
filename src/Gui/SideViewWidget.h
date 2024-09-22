@@ -1,8 +1,9 @@
 #ifndef SIDEVIEWWIDGET_H
 #define SIDEVIEWWIDGET_H
 
-#include <Core/Controller.h>
-#include <GUI/Handle.h>
+#include "Core/Controller.h"
+#include "Gui/Handle.h"
+
 #include <QWidget>
 
 class SideViewWidget : public QWidget

@@ -2,8 +2,8 @@
 #define CONTROLLER_H
 
 #include "Logic.h"
-#include "Typedefs.h"
-#include <Dependencies/Eigen/src/Geometry/Hyperplane.h>
+
+#include "Eigen/src/Geometry/Hyperplane.h"
 
 #include <QObject>
 #include <QPolygonF>

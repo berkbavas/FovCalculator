@@ -1,5 +1,7 @@
 #include "CentralWidget.h"
 
+#include "Core/Constants.h"
+
 CentralWidget::CentralWidget(QWidget *parent)
     : QWidget(parent)
 {}

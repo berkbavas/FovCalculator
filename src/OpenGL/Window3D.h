@@ -3,8 +3,7 @@
 
 #include "NodeManager.h"
 
-#include <Core/Constants.h>
-#include <Core/Controller.h>
+#include "Core/Controller.h"
 
 #include <QOpenGLFunctions>
 #include <QOpenGLWindow>
@@ -18,7 +17,6 @@ public:
 
     void initializeGL() override;
     void paintGL() override;
-    void resizeGL(int w, int h) override;
 
     void refresh();
     void setParameters(Controller::Window3DParameters *newParameters);

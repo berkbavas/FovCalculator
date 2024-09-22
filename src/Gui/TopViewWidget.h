@@ -1,9 +1,9 @@
 #ifndef TOPVIEWWIDGET_H
 #define TOPVIEWWIDGET_H
 
-#include <Core/Controller.h>
-#include <Dependencies/Eigen/Core>
-#include <GUI/Handle.h>
+#include "Core/Controller.h"
+#include "Gui/Handle.h"
+
 #include <QWidget>
 
 class TopViewWidget : public QWidget

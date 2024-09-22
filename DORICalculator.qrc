@@ -1,0 +1,37 @@
+<RCC>
+    <qresource prefix="/">
+        <file>resources/Style/Style.qss</file>
+        <file>resources/Fonts/Segoe/EULA.txt</file>
+        <file>resources/Fonts/Segoe/Segoe-UI-Variable-Static-Display-Bold.ttf</file>
+        <file>resources/Fonts/Segoe/Segoe-UI-Variable-Static-Display-Light.ttf</file>
+        <file>resources/Fonts/Segoe/Segoe-UI-Variable-Static-Display-Semibold.ttf</file>
+        <file>resources/Fonts/Segoe/Segoe-UI-Variable-Static-Display-Semilight.ttf</file>
+        <file>resources/Fonts/Segoe/Segoe-UI-Variable-Static-Display.ttf</file>
+        <file>resources/Fonts/Segoe/Segoe-UI-Variable-Static-Small-Bold.ttf</file>
+        <file>resources/Fonts/Segoe/Segoe-UI-Variable-Static-Small-Light.ttf</file>
+        <file>resources/Fonts/Segoe/Segoe-UI-Variable-Static-Small-Semibold.ttf</file>
+        <file>resources/Fonts/Segoe/Segoe-UI-Variable-Static-Small-Semilight.ttf</file>
+        <file>resources/Fonts/Segoe/Segoe-UI-Variable-Static-Small.ttf</file>
+        <file>resources/Fonts/Segoe/Segoe-UI-Variable-Static-Text-Bold.ttf</file>
+        <file>resources/Fonts/Segoe/Segoe-UI-Variable-Static-Text-Light.ttf</file>
+        <file>resources/Fonts/Segoe/Segoe-UI-Variable-Static-Text-Semibold.ttf</file>
+        <file>resources/Fonts/Segoe/Segoe-UI-Variable-Static-Text-Semilight.ttf</file>
+        <file>resources/Fonts/Segoe/Segoe-UI-Variable-Static-Text.ttf</file>
+        <file>resources/Fonts/Segoe/SegoeUI-VF.ttf</file>
+        <file>resources/Models/SimpleModels/Camera.obj</file>
+        <file>resources/Models/SimpleModels/Capsule.obj</file>
+        <file>resources/Models/SimpleModels/Cone.obj</file>
+        <file>resources/Models/SimpleModels/Cube.obj</file>
+        <file>resources/Models/SimpleModels/Cylinder.obj</file>
+        <file>resources/Models/SimpleModels/Dome.obj</file>
+        <file>resources/Models/SimpleModels/Plane.obj</file>
+        <file>resources/Models/SimpleModels/Pyramid.obj</file>
+        <file>resources/Models/SimpleModels/Sphere.obj</file>
+        <file>resources/Models/SimpleModels/Suzanne.obj</file>
+        <file>resources/Models/SimpleModels/Tetrahedron.obj</file>
+        <file>resources/Models/SimpleModels/Torus.obj</file>
+        <file>resources/Models/SimpleModels/TorusKnot.obj</file>
+        <file>resources/Shaders/Basic/FragmentShader.frag</file>
+        <file>resources/Shaders/Basic/VertexShader.vert</file>
+    </qresource>
+</RCC>

@@ -19,8 +19,12 @@ bool BasicShader::init()
     initializeOpenGLFunctions();
 
     mProgram = new QOpenGLShaderProgram;
-    mProgram->addShaderFromSourceCode(QOpenGLShader::Vertex, Helper::getBytes(":/Resources/Shaders/Basic/VertexShader.vert"));
-    mProgram->addShaderFromSourceCode(QOpenGLShader::Fragment, Helper::getBytes(":/Resources/Shaders/Basic/FragmentShader.frag"));
+    mProgram->addShaderFromSourceCode(QOpenGLShader::Vertex,
+                                      Helper::getBytes(
+                                          ":/resources/Shaders/Basic/VertexShader.vert"));
+    mProgram->addShaderFromSourceCode(QOpenGLShader::Fragment,
+                                      Helper::getBytes(
+                                          ":/resources/Shaders/Basic/FragmentShader.frag"));
 
     mProgram->link();
     mProgram->bind();

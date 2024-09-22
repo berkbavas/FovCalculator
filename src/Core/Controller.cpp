@@ -1,11 +1,9 @@
 #include "Controller.h"
 
-#include <Core/Constants.h>
-#include <Core/Enums.h>
-#include <GUI/CentralWidget.h>
-#include <GUI/SideViewWidget.h>
-#include <GUI/TopViewWidget.h>
-#include <OpenGL/Window3D.h>
+#include "Gui/CentralWidget.h"
+#include "Gui/SideViewWidget.h"
+#include "Gui/TopViewWidget.h"
+#include "OpenGL/Window3D.h"
 
 #include <QDebug>
 #include <QtMath>
