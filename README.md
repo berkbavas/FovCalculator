@@ -3,7 +3,8 @@ DORI (Detection - Observation - Recognition - Identification) limit calculator b
 
 ## Build
 1) Install `Qt 5.15.2`.
-2) Open `DORICalculator.pro` with `QtCreator` and build & run it. 
+2) Open `DORICalculator.pro` with `QtCreator`.
+3) Build & run. 
 
 ## Screenshots
 ![Screenshot_2022-01-28_203111](https://github.com/berkbavas/DORICalculator/assets/53399385/62fcb5e9-cb15-4de1-bce7-74fedfb331a7)
