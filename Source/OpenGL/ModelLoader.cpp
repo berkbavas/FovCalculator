@@ -75,7 +75,7 @@ SimpleModelData *ModelLoader::loadSimpleModelData(SimpleModel::Type type)
     return nullptr;
 }
 
-const QString ModelLoader::MODELS_PATH = ":/resources/Models/SimpleModels/";
+const QString ModelLoader::MODELS_PATH = ":/Resources/Models/SimpleModels/";
 
 const QMap<SimpleModel::Type, QString> ModelLoader::SIMPLE_MODELS_PATHS = { //
     {SimpleModel::Camera, MODELS_PATH + "Camera.obj"},

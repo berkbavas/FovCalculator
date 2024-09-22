@@ -2,56 +2,56 @@ QT       += core gui opengl widgets
 
 CONFIG += c++11
 
-INCLUDEPATH += libs \
-                src\
+INCLUDEPATH += Libs \
+                Source\
 
 SOURCES += \
-    src/Core/Controller.cpp \
-    src/Core/Logic.cpp \
-    src/Gui/CentralWidget.cpp \
-    src/Gui/Handle.cpp \
-    src/Gui/Rectangle.cpp \
-    src/Gui/SideViewWidget.cpp \
-    src/Gui/TopViewWidget.cpp \
-    src/Main.cpp \
-    src/OpenGL/BasicShader.cpp \
-    src/OpenGL/Camera.cpp \
-    src/OpenGL/CustomNode.cpp \
-    src/OpenGL/CustomNodeData.cpp \
-    src/OpenGL/Helper.cpp \
-    src/OpenGL/Light.cpp \
-    src/OpenGL/Material.cpp \
-    src/OpenGL/ModelLoader.cpp \
-    src/OpenGL/Node.cpp \
-    src/OpenGL/NodeManager.cpp \
-    src/OpenGL/SimpleModel.cpp \
-    src/OpenGL/SimpleModelData.cpp \
-    src/OpenGL/Window3D.cpp
+    Source/Core/Controller.cpp \
+    Source/Core/Logic.cpp \
+    Source/Gui/CentralWidget.cpp \
+    Source/Gui/Handle.cpp \
+    Source/Gui/Rectangle.cpp \
+    Source/Gui/SideViewWidget.cpp \
+    Source/Gui/TopViewWidget.cpp \
+    Source/Main.cpp \
+    Source/OpenGL/BasicShader.cpp \
+    Source/OpenGL/Camera.cpp \
+    Source/OpenGL/CustomNode.cpp \
+    Source/OpenGL/CustomNodeData.cpp \
+    Source/OpenGL/Helper.cpp \
+    Source/OpenGL/Light.cpp \
+    Source/OpenGL/Material.cpp \
+    Source/OpenGL/ModelLoader.cpp \
+    Source/OpenGL/Node.cpp \
+    Source/OpenGL/NodeManager.cpp \
+    Source/OpenGL/SimpleModel.cpp \
+    Source/OpenGL/SimpleModelData.cpp \
+    Source/OpenGL/Window3D.cpp
 
 HEADERS += \
-    src/Core/Constants.h \
-    src/Core/Controller.h \
-    src/Core/Enums.h \
-    src/Core/Logic.h \
-    src/Core/Typedefs.h \
-    src/Gui/CentralWidget.h \
-    src/Gui/Handle.h \
-    src/Gui/Rectangle.h \
-    src/Gui/SideViewWidget.h \
-    src/Gui/TopViewWidget.h \
-    src/OpenGL/BasicShader.h \
-    src/OpenGL/Camera.h \
-    src/OpenGL/CustomNode.h \
-    src/OpenGL/CustomNodeData.h \
-    src/OpenGL/Helper.h \
-    src/OpenGL/Light.h \
-    src/OpenGL/Material.h \
-    src/OpenGL/ModelLoader.h \
-    src/OpenGL/Node.h \
-    src/OpenGL/NodeManager.h \
-    src/OpenGL/SimpleModel.h \
-    src/OpenGL/SimpleModelData.h \
-    src/OpenGL/Window3D.h
+    Source/Core/Constants.h \
+    Source/Core/Controller.h \
+    Source/Core/Enums.h \
+    Source/Core/Logic.h \
+    Source/Core/Typedefs.h \
+    Source/Gui/CentralWidget.h \
+    Source/Gui/Handle.h \
+    Source/Gui/Rectangle.h \
+    Source/Gui/SideViewWidget.h \
+    Source/Gui/TopViewWidget.h \
+    Source/OpenGL/BasicShader.h \
+    Source/OpenGL/Camera.h \
+    Source/OpenGL/CustomNode.h \
+    Source/OpenGL/CustomNodeData.h \
+    Source/OpenGL/Helper.h \
+    Source/OpenGL/Light.h \
+    Source/OpenGL/Material.h \
+    Source/OpenGL/ModelLoader.h \
+    Source/OpenGL/Node.h \
+    Source/OpenGL/NodeManager.h \
+    Source/OpenGL/SimpleModel.h \
+    Source/OpenGL/SimpleModelData.h \
+    Source/OpenGL/Window3D.h
 
 RESOURCES += \
     DORICalculator.qrc
