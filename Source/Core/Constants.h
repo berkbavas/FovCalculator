@@ -32,13 +32,13 @@ namespace FovCalculator
     //                                      QColor(148, 170, 214, 168),
     //                                      QColor(208, 208, 208, 168) };
 
-    constexpr QColor REGION_COLORS[] = { QColor(172, 78, 125, 128),
-                                         QColor(165, 104, 107, 128),
-                                         QColor(171, 166, 72, 128),
-                                         QColor(115, 145, 108, 128),
-                                         QColor(92, 135, 92, 128),
-                                         QColor(92, 92, 115, 128),
-                                         QColor(128, 128, 128, 128) };
+    constexpr QColor REGION_COLORS[] = { QColor(253, 111, 182, 96),
+                                         QColor(243, 150, 155, 96),
+                                         QColor(252, 245, 102, 96),
+                                         QColor(167, 212, 156, 96),
+                                         QColor(170, 255, 170, 96),
+                                         QColor(148, 170, 214, 96),
+                                         QColor(208, 208, 208, 96) };
 
     enum Vertex
     {
