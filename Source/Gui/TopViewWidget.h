@@ -1,62 +1,69 @@
-#ifndef TOPVIEWWIDGET_H
-#define TOPVIEWWIDGET_H
+#pragma once
 
-#include "Core/Controller.h"
 #include "Gui/Handle.h"
+#include "Util/Macros.h"
 
+#include <QPen>
 #include <QWidget>
 
-class TopViewWidget : public QWidget
+namespace FovCalculator
 {
-    Q_OBJECT
-public:
-    explicit TopViewWidget(QWidget *parent = nullptr);
+    class TopViewWidget : public QWidget
+    {
+        Q_OBJECT
+      public:
+        explicit TopViewWidget(QWidget* parent = nullptr);
 
-    void setParameters(Controller::TopViewWidgetParameters *newParameters);
-    void setOrigin(QPointF newOrigin);
-    void setMeterToPixelRatio(float newMeterToPixelRatio);
+        void SetGroundIntersection(int index, const QPointF& point);
+        void SetTargetIntersection(int index, const QPointF& point);
+        void SetRegion(int index, const QPolygonF& region);
 
-signals:
-    void dirty();
-    void pan(int x, int y);
-    void zoom(int);
-    void cursorPositionChanged(QPointF position);
+      signals:
+        void
+        UserRequestsPan(const QPointF& delta);
+        void WheelMoved(QWheelEvent* event);
+        void UserRequestsTargetDistanceChange(const QPointF& delta);
+        void UserRequestsFovWidthChange(float delta);
 
-public slots:
-    void refresh();
-    QPointF mapFrom3d(float x, float y);
-    QPointF mapFrom3d(Eigen::Vector3f vector);
-    Eigen::Vector3f mapFrom2d(QPointF point);
-    Eigen::Vector3f mapFrom2d(float x, float y);
+      private:
+        void paintEvent(QPaintEvent* event) override;
+        void mousePressEvent(QMouseEvent*) override;
+        void mouseMoveEvent(QMouseEvent*) override;
+        void mouseReleaseEvent(QMouseEvent*) override;
+        void wheelEvent(QWheelEvent* event) override;
 
-private:
-    void updateHandles();
-    void updateCursor();
+        void UpdateHandles();
+        void DrawCrossPattern();
+        void DrawRegions();
+        void DrawGroundIntersections();
+        void DrawTargetIntersections();
+        void DrawHandles();
+        void DrawLabels();
 
-    void paintEvent(QPaintEvent *event) override;
-    void mousePressEvent(QMouseEvent *) override;
-    void mouseMoveEvent(QMouseEvent *) override;
-    void mouseReleaseEvent(QMouseEvent *) override;
-    void wheelEvent(QWheelEvent *event) override;
+        void UpdateCursor();
 
-    Controller::TopViewWidgetParameters *mParameters;
-    QPointF mOrigin;
-    float mMeterToPixelRatio;
+        QBrush mCrossPatternBursh;
+        QPen mDashedPen;
+        QPen mSolidPen;
 
-    Handle mFovWidthHandleTop;
-    Handle mFovWidthHandleBottom;
-    Handle mTargetHandle;
-    Handle mCameraHandle;
+        QPointF mGroundIntersections[4];
+        QPointF mTargetIntersections[4];
 
-    QBrush mCrossedPatternBursh;
-    QPen mDashedPen;
+        DEFINE_MEMBER(QPointF, Origin);
+        DEFINE_MEMBER(float, HorizontalFov);
+        DEFINE_MEMBER(float, FovWidth);
 
-    QPoint mOldMousePosition;
+        QPointF mPreviousMousePosition;
+        bool mUserRequestsPan{ false };
 
-    QFont mLabelFont;
-    QColor mLabelColor;
+        Handle mTargetHandle;
+        Handle mCameraHandle;
+        Handle mFovWidthHandleTop;
+        Handle mFovWidthHandleBottom;
 
-    bool mMousePressedOnCanvas;
-};
+        QFont mLabelFont;
+        QColor mLabelColor;
 
-#endif // TOPVIEWWIDGET_H
+        QPolygonF mRegions[7];
+    };
+}

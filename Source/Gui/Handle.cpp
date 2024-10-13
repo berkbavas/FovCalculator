@@ -3,47 +3,42 @@
 #include <QMouseEvent>
 #include <QPainter>
 
-Handle::Handle()
-    : mPressed(false)
-    , mHovered(false)
-{}
-
-bool Handle::contains(float x, float y)
+bool FovCalculator::Handle::Contains(float x, float y)
 {
     return mRectangle.contains(x, y);
 }
 
-bool Handle::contains(const QPoint &point)
+bool FovCalculator::Handle::Contains(const QPoint& point)
 {
     return mRectangle.contains(point);
 }
-void Handle::setCenter(float x, float y)
+void FovCalculator::Handle::SetCenter(float x, float y)
 {
     mRectangle = QRect(x - 0.5f * mRectangle.width(), y - 0.5f * mRectangle.height(), mRectangle.width(), mRectangle.height());
 }
 
-void Handle::setCenter(const QPointF &center)
+void FovCalculator::Handle::SetCenter(const QPointF& center)
 {
-    setCenter(center.x(), center.y());
+    SetCenter(center.x(), center.y());
 }
 
-void Handle::setSize(float w, float h)
+void FovCalculator::Handle::SetSize(float w, float h)
 {
     mRectangle = QRect(mRectangle.x(), mRectangle.y(), w, h);
 }
 
-QPointF Handle::getCenter()
+QPointF FovCalculator::Handle::GetCenter()
 {
     return mRectangle.center();
 }
 
-QPointF Handle::getCenter(float leftOffset, float topOffset)
+QPointF FovCalculator::Handle::GetCenter(float leftOffset, float topOffset)
 {
     QPointF center = mRectangle.center();
     return QPointF(center.x() + leftOffset, center.y() + topOffset);
 }
 
-void Handle::draw(QPaintDevice *device)
+void FovCalculator::Handle::Draw(QPaintDevice* device)
 {
     QPainter painter(device);
     painter.setRenderHint(QPainter::Antialiasing, false);
@@ -59,41 +54,41 @@ void Handle::draw(QPaintDevice *device)
     painter.drawRect(mRectangle);
 }
 
-bool Handle::pressed() const
+bool FovCalculator::Handle::GetPressed() const
 {
     return mPressed;
 }
 
-void Handle::setPressed(bool newPressed)
+void FovCalculator::Handle::SetPressed(bool newPressed)
 {
     mPressed = newPressed;
 }
 
-bool Handle::hovered() const
+bool FovCalculator::Handle::GetHovered() const
 {
     return mHovered;
 }
 
-void Handle::setHovered(bool newHovered)
+void FovCalculator::Handle::SetHovered(bool newHovered)
 {
     mHovered = newHovered;
 }
-void Handle::setPen(const QPen &newPen)
+void FovCalculator::Handle::SetPen(const QPen& newPen)
 {
     mPen = newPen;
 }
 
-void Handle::setBrush(const QBrush &newBrush)
+void FovCalculator::Handle::SetBrush(const QBrush& newBrush)
 {
     mBrush = newBrush;
 }
 
-void Handle::setHoveredBrush(const QBrush &newHoveredBrush)
+void FovCalculator::Handle::SetHoveredBrush(const QBrush& newHoveredBrush)
 {
     mHoveredBrush = newHoveredBrush;
 }
 
-void Handle::setPressedBrush(const QBrush &newPressedBrush)
+void FovCalculator::Handle::SetPressedBrush(const QBrush& newPressedBrush)
 {
     mPressedBrush = newPressedBrush;
 }

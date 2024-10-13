@@ -1,45 +1,46 @@
-#ifndef HANDLE_H
-#define HANDLE_H
+#pragma once
 
 #include <QPen>
-#include <QWidget>
 
-class Handle
+namespace FovCalculator
 {
-public:
-    Handle();
+    class Handle
+    {
+      public:
+        Handle() = default;
 
-    bool contains(float x, float y);
-    bool contains(const QPoint &point);
+        bool Contains(float x, float y);
+        bool Contains(const QPoint& point);
 
-    void draw(QPaintDevice *device);
+        void Draw(QPaintDevice* device);
 
-    void setPressed(bool newPressed);
-    bool pressed() const;
+        void SetPressed(bool newPressed);
+        bool GetPressed() const;
 
-    void setHovered(bool newHovered);
-    bool hovered() const;
+        void SetHovered(bool newHovered);
+        bool GetHovered() const;
 
-    void setPen(const QPen &newPen);
-    void setBrush(const QBrush &newBrush);
-    void setHoveredBrush(const QBrush &newHoveredBrush);
-    void setPressedBrush(const QBrush &newPressedBrush);
+        void SetPen(const QPen& newPen);
+        void SetBrush(const QBrush& newBrush);
+        void SetHoveredBrush(const QBrush& newHoveredBrush);
+        void SetPressedBrush(const QBrush& newPressedBrush);
 
-    void setCenter(float x, float y);
-    void setCenter(const QPointF &center);
+        void SetCenter(float x, float y);
+        void SetCenter(const QPointF& center);
 
-    void setSize(float w, float h);
+        void SetSize(float w, float h);
 
-    QPointF getCenter();
-    QPointF getCenter(float leftOffset, float topOffset);
+        QPointF GetCenter();
+        QPointF GetCenter(float leftOffset, float topOffset);
 
-private:
-    QRect mRectangle;
-    QBrush mBrush, mPressedBrush, mHoveredBrush;
-    QPen mPen;
+      private:
+        QRect mRectangle;
+        QBrush mBrush;
+        QBrush mPressedBrush;
+        QBrush mHoveredBrush;
+        QPen mPen;
 
-    bool mPressed;
-    bool mHovered;
-};
-
-#endif // HANDLE_H
+        bool mPressed{ false };
+        bool mHovered{ false };
+    };
+}

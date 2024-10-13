@@ -1,357 +1,226 @@
 #include "Controller.h"
 
-#include "Gui/CentralWidget.h"
-#include "Gui/SideViewWidget.h"
-#include "Gui/TopViewWidget.h"
-#include "OpenGL/Window3D.h"
-
-#include <QDebug>
+#include <QGridLayout>
+#include <QPolygonF>
+#include <QStyle>
 #include <QtMath>
+#include <cmath>
 
-Controller::Controller(QObject *parent)
-    : QObject(parent)
-    , mZoomStepSize(2.0f)
-    , mOrigin(368, 368)
-    , mGround(Eigen::Vector3f(0, 0, 1), 0)
+FovCalculator::Controller::Controller(QObject* parent)
 {
-    mLogicParameters = new Logic::Parameters;
-    mLogicParameters->camera.height = 5;
-    mLogicParameters->target.height = 2;
-    mLogicParameters->target.distance = 5;
-    mLogicParameters->lowerBoundary.height = 0;
-    mLogicParameters->lowerBoundary.distance = 0;
-
-    mLogicParameters->frustum.zNear = 0.1f;
-    mLogicParameters->frustum.zFar = 1000;
-
-    mLogicParameters->camera.sensor.width = 1920.0f;
-    mLogicParameters->camera.sensor.height = 1080.0f;
-    mLogicParameters->camera.sensor.aspectRatio = 1920.0f / 1080.0f;
-    mLogicParameters->target.fovWidth = 10;
-
     mLogic = new Logic;
-    mLogic->setParameters(mLogicParameters);
-    mLogicParameters->frustum.horizontalFov = mLogic->calculateHorizontalFovForGivenFovWidth(10);
+    mConverter = new Converter(this);
+    mWindow = new Window;
 
-    mCentralWidget = new CentralWidget;
-    mWindow3D = new Window3D;
-    mSideViewWidget = new SideViewWidget;
-    mTopViewWidget = new TopViewWidget;
+    mInfoWidget = mWindow->GetInfoWidget();
+    mInfoWidget->SetLogic(mLogic);
 
-    mCentralWidget->setParameters(mLogicParameters);
+    mTopViewWidget = mWindow->GetTopViewWidget();
+    mSideViewWidget = mWindow->GetSideViewWidget();
 
-    mSideViewWidgetParameters = new SideViewWidgetParameters;
-    mSideViewWidget->setParameters(mSideViewWidgetParameters);
+    connect(mInfoWidget, &InfoWidget::GuiNeedsUpdate, this, &Controller::Update);
+    connect(mTopViewWidget, &TopViewWidget::UserRequestsPan, this, &Controller::OnUserRequestsPan);
+    connect(mTopViewWidget, &TopViewWidget::UserRequestsTargetDistanceChange, this, &Controller::OnUserRequestsTargetDistanceChange);
+    connect(mTopViewWidget, &TopViewWidget::UserRequestsFovWidthChange, this, &Controller::OnUserRequestsFovWidthChange);
+    connect(mTopViewWidget, &TopViewWidget::WheelMoved, this, &Controller::OnWheelMoved);
+    connect(mConverter, &Converter::GuiNeedsUpdate, this, &Controller::Update);
 
-    mTopViewWidgetParameters = new TopViewWidgetParameters;
-    mTopViewWidget->setParameters(mTopViewWidgetParameters);
-
-    mWindow3DParameters = new Window3DParameters;
-    mWindow3D->setParameters(mWindow3DParameters);
-
-    mCentralWidget->setSideViewWidget(mSideViewWidget);
-    mCentralWidget->setTopViewWidget(mTopViewWidget);
-    mCentralWidget->init();
-
-    // Connections
-    connect(mSideViewWidget, &SideViewWidget::dirty, this, &Controller::onDirty);
-    connect(mSideViewWidget, &SideViewWidget::zoom, this, &Controller::onZoom);
-    connect(mSideViewWidget, &SideViewWidget::pan, this, &Controller::onPan);
-    connect(mSideViewWidget, &SideViewWidget::cursorPositionChanged, mCentralWidget, &CentralWidget::onCursorPositionChanged);
-
-    connect(mTopViewWidget, &TopViewWidget::dirty, this, &Controller::onDirty);
-    connect(mTopViewWidget, &TopViewWidget::zoom, this, &Controller::onZoom);
-    connect(mTopViewWidget, &TopViewWidget::pan, this, &Controller::onPan);
-    connect(mTopViewWidget, &TopViewWidget::cursorPositionChanged, mCentralWidget, &CentralWidget::onCursorPositionChanged);
-
-    connect(mCentralWidget, &CentralWidget::dirty, this, &Controller::onDirty);
-
-    setMeterToPixelRatio(8);
-    setOrigin(mOrigin);
-
-    update();
+    connect(mSideViewWidget, &SideViewWidget::UserRequestsPan, this, &Controller::OnUserRequestsPan);
+    connect(mSideViewWidget, &SideViewWidget::WheelMoved, this, &Controller::OnWheelMoved);
+    connect(mSideViewWidget, &SideViewWidget::UserRequestsTargetDistanceChange, this, &Controller::OnUserRequestsTargetDistanceChange);
+    connect(mSideViewWidget, &SideViewWidget::UserRequestsTargetHeightChange, this, &Controller::OnUserRequestsTargetHeightChange);
+    connect(mSideViewWidget, &SideViewWidget::UserRequestsCameraHeightChange, this, &Controller::OnUserRequestsCameraHeightChange);
+    connect(mSideViewWidget, &SideViewWidget::UserRequestsLowerBoundaryHeightChange, this, &Controller::OnUserRequestsLowerBoundaryHeightChange);
 }
 
-void Controller::init()
+void FovCalculator::Controller::Run()
 {
-    mCentralWidget->showMaximized();
-    mWindow3D->resize(800, 600);
-    mWindow3D->showNormal();
+    mWindow->showMaximized();
+    Update();
 }
 
-void Controller::update()
+void FovCalculator::Controller::Update()
 {
-    mLogic->calculate();
+    mLogic->Calculate();
 
-    // TopViewWidgetParameters
+    UpdateSideViewWidget();
+    UpdateTopViewWidget();
+}
+
+void FovCalculator::Controller::UpdateSideViewWidget()
+{
+    mSideViewWidget->SetMeterToPixelRatio(mConverter->GetMeterToPixelRatio());
+    mSideViewWidget->SetOrigin(mConverter->GetOrigin());
+    mSideViewWidget->SetCameraHeight(mConverter->ConvertDistanceFromWorldToGui(mLogic->GetCameraHeight()));
+    mSideViewWidget->SetTargetDistance(mConverter->ConvertDistanceFromWorldToGui(mLogic->GetTargetDistance()));
+    mSideViewWidget->SetTargetHeight(mConverter->ConvertDistanceFromWorldToGui(mLogic->GetTargetHeight()));
+    mSideViewWidget->SetLowerBoundaryDistance(mConverter->ConvertDistanceFromWorldToGui(mLogic->GetLowerBoundaryDistance()));
+    mSideViewWidget->SetLowerBoundaryHeight(mConverter->ConvertDistanceFromWorldToGui(mLogic->GetLowerBoundaryHeight()));
+    mSideViewWidget->SetBisectorIntersection(mConverter->MapFromWorldToSideView(mLogic->GetBisector(0)));
+    mSideViewWidget->SetOppositeBisectorIntersection(mConverter->MapFromWorldToSideView(mLogic->GetBisector(1)));
+    mSideViewWidget->SetTiltAngle(mLogic->GetTiltAngle());
+
+    for (int i = 0; i < 4; i++)
     {
-        mTopViewWidgetParameters->target.distance = mLogicParameters->target.distance;
-        mTopViewWidgetParameters->target.fovWidth = mLogicParameters->target.fovWidth;
-        mTopViewWidgetParameters->camera.tiltAngle = mLogicParameters->camera.tiltAngle;
-        mTopViewWidgetParameters->camera.height = mLogicParameters->camera.height;
-        mTopViewWidgetParameters->camera.horizontalFov = mLogicParameters->frustum.horizontalFov;
-        mTopViewWidgetParameters->camera.verticalFov = mLogicParameters->frustum.verticalFov;
-
-        for (int i = 0; i < 4; ++i) {
-            mTopViewWidgetParameters->ground.intersections[i] = mTopViewWidget->mapFrom3d(mLogicParameters->frustum.bottomVertices[i]);
-            mTopViewWidgetParameters->target.intersections[i] = mTopViewWidget->mapFrom3d(mLogicParameters->target.intersections[i]);
-            mTopViewWidgetParameters->lowerBoundary.intersections[i] = mTopViewWidget->mapFrom3d(mLogicParameters->lowerBoundary.intersections[i]);
-        }
-
-        QPolygonF targetRoi;
-
-        if (abs(mLogicParameters->camera.height - mLogicParameters->target.height) < 0.0001f) {
-            targetRoi.append(mTopViewWidget->mapFrom3d(mTopViewWidgetParameters->target.distance, 0.5f * mTopViewWidgetParameters->target.fovWidth));
-            targetRoi.append(mTopViewWidget->mapFrom3d(0, 0));
-            targetRoi.append(mTopViewWidget->mapFrom3d(mTopViewWidgetParameters->target.distance, -0.5f * mTopViewWidgetParameters->target.fovWidth));
-        } else if (mLogicParameters->camera.height < mLogicParameters->target.height) {
-            targetRoi.append(mTopViewWidget->mapFrom3d(0, 0));
-            targetRoi.append(mTopViewWidgetParameters->target.intersections[0]);
-            targetRoi.append(mTopViewWidgetParameters->target.intersections[3]);
-        } else {
-            targetRoi.append(mTopViewWidgetParameters->target.intersections[0]);
-            targetRoi.append(mTopViewWidgetParameters->target.intersections[1]);
-            targetRoi.append(mTopViewWidgetParameters->target.intersections[2]);
-            targetRoi.append(mTopViewWidgetParameters->target.intersections[3]);
-        }
-
-        QPolygonF lowerBoundaryRoi;
-        lowerBoundaryRoi.append(mTopViewWidgetParameters->lowerBoundary.intersections[0]);
-        lowerBoundaryRoi.append(mTopViewWidgetParameters->lowerBoundary.intersections[1]);
-        lowerBoundaryRoi.append(mTopViewWidgetParameters->lowerBoundary.intersections[2]);
-        lowerBoundaryRoi.append(mTopViewWidgetParameters->lowerBoundary.intersections[3]);
-
-        QPolygonF roi = lowerBoundaryRoi.intersected(targetRoi);
-
-        for (int i = 0; i < 7; ++i) {
-            Eigen::Hyperplane<float, 3> plane(Eigen::Vector3f(0, 0, 1).normalized(), -mLogicParameters->lowerBoundary.height);
-            QVector<Eigen::Vector3f> intersections = mLogic->findIntersection(mLogicParameters->regions[i], plane);
-
-            QPolygonF region;
-            for (int i = 0; i < intersections.size(); ++i) {
-                region.append(mTopViewWidget->mapFrom3d(intersections[i]));
-            }
-
-            region = region.intersected(roi);
-            mTopViewWidgetParameters->regions[i].region = region;
-            mTopViewWidgetParameters->regions[i].visible = !region.isEmpty();
-        }
+        mSideViewWidget->SetGroundIntersection(i, mConverter->MapFromWorldToSideView(mLogic->GetFrustumBottomVertex(i)));
+        mSideViewWidget->SetTargetIntersection(i, mConverter->MapFromWorldToSideView(mLogic->GetTargetIntersection(Edge(i))));
+        mSideViewWidget->SetLowerBoundaryIntersection(i, mConverter->MapFromWorldToSideView(mLogic->GetLowerBoundaryIntersection(Edge(i))));
     }
 
-    // SideViewWidgetParameters
+    QPolygonF roi;
+
+    roi.append(mConverter->MapFromWorldToSideView(mLogic->GetTargetDistance(), mLogic->GetTargetHeight()));
+    roi.append(mConverter->MapFromWorldToSideView(mLogic->GetTargetDistance(), mLogic->GetLowerBoundaryHeight()));
+    roi.append(mConverter->MapFromWorldToSideView(mLogic->GetLowerBoundaryDistance(), mLogic->GetLowerBoundaryHeight()));
+    roi.append(mConverter->MapFromWorldToSideView(mLogic->GetLowerBoundaryDistance(), mLogic->GetTargetHeight()));
+
+    for (int i = 0; i < 7; ++i)
     {
-        mSideViewWidgetParameters->camera.tiltAngle = mLogicParameters->camera.tiltAngle;
-        mSideViewWidgetParameters->camera.height = mLogicParameters->camera.height;
-        mSideViewWidgetParameters->camera.horizontalFov = mLogicParameters->frustum.horizontalFov;
-        mSideViewWidgetParameters->camera.verticalFov = mLogicParameters->frustum.verticalFov;
-        mSideViewWidgetParameters->camera.position = mSideViewWidget->mapFrom3d(0, mLogicParameters->camera.height);
-        mSideViewWidgetParameters->target.height = mLogicParameters->target.height;
-        mSideViewWidgetParameters->target.distance = mLogicParameters->target.distance;
-        mSideViewWidgetParameters->target.position = mSideViewWidget->mapFrom3d(mLogicParameters->target.distance, mLogicParameters->target.height);
-        mSideViewWidgetParameters->lowerBoundary.height = mLogicParameters->lowerBoundary.height;
-        mSideViewWidgetParameters->lowerBoundary.distance = mLogicParameters->lowerBoundary.distance;
-        mSideViewWidgetParameters->lowerBoundary.position = mSideViewWidget->mapFrom3d(mLogicParameters->lowerBoundary.distance,
-                                                                                       mLogicParameters->lowerBoundary.height);
+        QPolygonF region;
 
-        for (int i = 0; i < 4; ++i) {
-            mSideViewWidgetParameters->ground.intersections[i] = mSideViewWidget->mapFrom3d(mLogicParameters->frustum.bottomVertices[i]);
-            mSideViewWidgetParameters->target.intersections[i] = mSideViewWidget->mapFrom3d(mLogicParameters->target.intersections[i]);
-            mSideViewWidgetParameters->lowerBoundary.intersections[i] = mSideViewWidget->mapFrom3d(mLogicParameters->lowerBoundary.intersections[i]);
-        }
+        region.append(mConverter->MapFromWorldToSideView(mLogic->GetRegion(i).bottomVertices[0]));
+        region.append(mConverter->MapFromWorldToSideView(mLogic->GetRegion(i).topVertices[0]));
+        region.append(mConverter->MapFromWorldToSideView(mLogic->GetRegion(i).topVertices[2]));
+        region.append(mConverter->MapFromWorldToSideView(mLogic->GetRegion(i).bottomVertices[2]));
 
-        mSideViewWidgetParameters->bisectorIntersection = mSideViewWidget->mapFrom3d(mLogicParameters->frustum.oppositeBisectorRay);
-        mSideViewWidgetParameters->oppositeBisectorIntersection = mSideViewWidget->mapFrom3d(mLogicParameters->frustum.bisectorRay);
-
-        QPolygonF roi;
-
-        roi.append(mSideViewWidget->mapFrom3d(mLogicParameters->target.distance, mLogicParameters->target.height));
-        roi.append(mSideViewWidget->mapFrom3d(mLogicParameters->target.distance, mLogicParameters->lowerBoundary.height));
-        roi.append(mSideViewWidget->mapFrom3d(mLogicParameters->lowerBoundary.distance, mLogicParameters->lowerBoundary.height));
-        roi.append(mSideViewWidget->mapFrom3d(mLogicParameters->lowerBoundary.distance, mLogicParameters->target.height));
-
-        for (int i = 0; i < 7; ++i) {
-            QPolygonF region;
-
-            region.append(mSideViewWidget->mapFrom3d(mLogicParameters->regions[i].bottomVertices[0]));
-            region.append(mSideViewWidget->mapFrom3d(mLogicParameters->regions[i].topVertices[0]));
-            region.append(mSideViewWidget->mapFrom3d(mLogicParameters->regions[i].topVertices[2]));
-            region.append(mSideViewWidget->mapFrom3d(mLogicParameters->regions[i].bottomVertices[2]));
-
-            region = region.intersected(roi);
-            mSideViewWidgetParameters->regions[i].region = region;
-            mSideViewWidgetParameters->regions[i].visible = !region.isEmpty();
-        }
+        region = region.intersected(roi);
+        mSideViewWidget->SetRegion(i, region);
     }
 
-    // OpenGL
+    mSideViewWidget->update();
+}
+
+void FovCalculator::Controller::UpdateTopViewWidget()
+{
+    mTopViewWidget->SetOrigin(mConverter->GetOrigin());
+    mTopViewWidget->SetFovWidth(mLogic->GetFovWidth());
+    mTopViewWidget->SetHorizontalFov(mLogic->GetHorizontalFov());
+
+    for (int i = 0; i < 4; i++)
     {
-        for (int i = 0; i < 7; i++) {
-            mWindow3DParameters->regions[i].vertices = createVertices(mLogicParameters->regions[i]);
-            mWindow3DParameters->regions[i].intersectsGround = intersectsGround(mWindow3DParameters->regions[i]);
+        mTopViewWidget->SetGroundIntersection(i, mConverter->MapFromWorldToTopView(mLogic->GetFrustumBottomVertex(i)));
+        mTopViewWidget->SetTargetIntersection(i, mConverter->MapFromWorldToTopView(mLogic->GetTargetIntersection(Edge(i))));
+    }
+
+    QPolygonF targetRoi;
+
+    if (std::abs(mLogic->GetCameraHeight() - mLogic->GetTargetHeight()) < 0.0001f)
+    {
+        targetRoi.append(mConverter->MapFromWorldToTopView(mLogic->GetTargetDistance(), 0.5f * mLogic->GetFovWidth()));
+        targetRoi.append(mConverter->MapFromWorldToTopView(0, 0));
+        targetRoi.append(mConverter->MapFromWorldToTopView(mLogic->GetTargetDistance(), -0.5f * mLogic->GetFovWidth()));
+    }
+    else if (mLogic->GetCameraHeight() < mLogic->GetTargetHeight())
+    {
+        targetRoi.append(mConverter->MapFromWorldToTopView(0, 0));
+        targetRoi.append(mConverter->MapFromWorldToTopView(mLogic->GetTargetIntersection(Edge(0))));
+        targetRoi.append(mConverter->MapFromWorldToTopView(mLogic->GetTargetIntersection(Edge(3))));
+    }
+    else
+    {
+        targetRoi.append(mConverter->MapFromWorldToTopView(mLogic->GetTargetIntersection(Edge(0))));
+        targetRoi.append(mConverter->MapFromWorldToTopView(mLogic->GetTargetIntersection(Edge(1))));
+        targetRoi.append(mConverter->MapFromWorldToTopView(mLogic->GetTargetIntersection(Edge(2))));
+        targetRoi.append(mConverter->MapFromWorldToTopView(mLogic->GetTargetIntersection(Edge(3))));
+    }
+
+    QPolygonF lowerBoundaryRoi;
+    lowerBoundaryRoi.append(mConverter->MapFromWorldToTopView(mLogic->GetLowerBoundaryIntersection(Edge(0))));
+    lowerBoundaryRoi.append(mConverter->MapFromWorldToTopView(mLogic->GetLowerBoundaryIntersection(Edge(1))));
+    lowerBoundaryRoi.append(mConverter->MapFromWorldToTopView(mLogic->GetLowerBoundaryIntersection(Edge(2))));
+    lowerBoundaryRoi.append(mConverter->MapFromWorldToTopView(mLogic->GetLowerBoundaryIntersection(Edge(3))));
+
+    QPolygonF roi = lowerBoundaryRoi.intersected(targetRoi);
+
+    for (int i = 0; i < 7; ++i)
+    {
+        Eigen::Hyperplane<float, 3> plane(Eigen::Vector3f(0, 0, 1).normalized(), -mLogic->GetLowerBoundaryHeight());
+        QVector<Eigen::Vector3f> intersections = mLogic->FindIntersection(mLogic->GetRegion(RegionType(i)), plane);
+
+        QPolygonF region;
+        for (int i = 0; i < intersections.size(); ++i)
+        {
+            region.append(mConverter->MapFromWorldToTopView(intersections[i]));
         }
 
-        mWindow3DParameters->frustumEdges = createFrustumEdges(mLogicParameters->frustum);
-        mWindow3DParameters->cameraHeight = mLogicParameters->camera.height;
-        mWindow3DParameters->tiltAngle = mLogicParameters->camera.tiltAngle;
+        region = region.intersected(roi);
+        mTopViewWidget->SetRegion(i, region);
     }
 
-    mCentralWidget->refresh();
-    mSideViewWidget->refresh();
-    mTopViewWidget->refresh();
-    mWindow3D->refresh();
+    mTopViewWidget->update();
 }
 
-bool Controller::intersectsGround(const Region3D &region)
+void FovCalculator::Controller::OnUserRequestsPan(const QPointF& delta)
 {
-    for (int i = 0; i < region.vertices.size(); i++) {
-        if (region.vertices[i].y() >= 0)
-            return true;
-    }
-
-    return false;
+    mConverter->Pan(delta);
 }
 
-QVector<QVector3D> Controller::convert(const QVector<Eigen::Vector3f> &vectors)
+void FovCalculator::Controller::OnWheelMoved(QWheelEvent* event)
 {
-    QVector<QVector3D> result;
-    int size = vectors.size();
-
-    for (int i = 1; i < size; i += 2) {
-        result << QVector3D(vectors[i - 1].x(), vectors[i - 1].z(), -vectors[i - 1].y());
-        result << QVector3D(vectors[i].x(), vectors[i].z(), -vectors[i].y());
-        result << QVector3D(vectors[(i + 1) % size].x(), vectors[(i + 1) % size].z(), -vectors[(i + 1) % size].y());
+    if (event->angleDelta().y() < 0)
+    {
+        mConverter->ZoomIn();
     }
-
-    return result;
-}
-
-QVector<QVector3D> Controller::createFrustumEdges(const Logic::Frustum &frustum)
-{
-    QVector<QVector3D> result;
-
-    for (int i = 0; i < 4; i++) {
-        result << QVector3D(frustum.topVertices[i].x(), frustum.topVertices[i].z(), -frustum.topVertices[i].y());
-        result << QVector3D(frustum.topVertices[(i + 1) % 4].x(), frustum.topVertices[(i + 1) % 4].z(), -frustum.topVertices[(i + 1) % 4].y());
-    }
-
-    for (int i = 0; i < 4; i++) {
-        result << QVector3D(frustum.topVertices[i].x(), frustum.topVertices[i].z(), -frustum.topVertices[i].y());
-        result << QVector3D(frustum.bottomVertices[i].x(), frustum.bottomVertices[i].z(), -frustum.bottomVertices[i].y());
-    }
-
-    for (int i = 0; i < 4; i++) {
-        result << QVector3D(frustum.bottomVertices[i].x(), frustum.bottomVertices[i].z(), -frustum.bottomVertices[i].y());
-        result << QVector3D(frustum.bottomVertices[(i + 1) % 4].x(),
-                            frustum.bottomVertices[(i + 1) % 4].z(),
-                            -frustum.bottomVertices[(i + 1) % 4].y());
-    }
-    return result;
-}
-
-QVector<QVector3D> Controller::createVertices(const Logic::Region &region)
-{
-    QVector<QVector3D> vertices;
-
-    for (int i = 0; i < 3; i++) {
-        vertices << QVector3D(region.topVertices[i].x(), region.topVertices[i].z(), -region.topVertices[i].y());
-    }
-
-    for (int i = 2; i < 5; i++) {
-        vertices << QVector3D(region.topVertices[i % 4].x(), region.topVertices[i % 4].z(), -region.topVertices[i % 4].y());
-    }
-
-    for (int i = 0; i < 4; i++) {
-        vertices << QVector3D(region.topVertices[i].x(), region.topVertices[i].z(), -region.topVertices[i].y());
-        vertices << QVector3D(region.bottomVertices[i].x(), region.bottomVertices[i].z(), -region.bottomVertices[i].y());
-        vertices << QVector3D(region.bottomVertices[(i + 1) % 4].x(), region.bottomVertices[(i + 1) % 4].z(), -region.bottomVertices[(i + 1) % 4].y());
-        vertices << QVector3D(region.bottomVertices[(i + 1) % 4].x(), region.bottomVertices[(i + 1) % 4].z(), -region.bottomVertices[(i + 1) % 4].y());
-        vertices << QVector3D(region.topVertices[(i + 1) % 4].x(), region.topVertices[(i + 1) % 4].z(), -region.topVertices[(i + 1) % 4].y());
-        vertices << QVector3D(region.topVertices[i % 4].x(), region.topVertices[i % 4].z(), -region.topVertices[i % 4].y());
-    }
-
-    for (int i = 0; i < 3; i++) {
-        vertices << QVector3D(region.bottomVertices[i].x(), region.bottomVertices[i].z(), -region.bottomVertices[i].y());
-    }
-
-    for (int i = 2; i < 5; i++) {
-        vertices << QVector3D(region.bottomVertices[i % 4].x(), region.bottomVertices[i % 4].z(), -region.bottomVertices[i % 4].y());
-    }
-
-    return vertices;
-}
-
-QVector<QVector3D> Controller::createNormals(const QVector<QVector3D> &vertices)
-{
-    QVector<QVector3D> normals;
-
-    for (int i = 1; i < vertices.size(); i += 3) {
-        QVector3D u = vertices[i - 1] - vertices[i];
-        QVector3D v = vertices[i + 1] - vertices[i];
-        u.normalize();
-        v.normalize();
-
-        QVector3D vxu = QVector3D::crossProduct(v, u);
-        vxu.normalize();
-        normals << vxu;
-        normals << vxu;
-        normals << vxu;
-    }
-
-    return normals;
-}
-
-void Controller::onDirty()
-{
-    QObject *sender = QObject::sender();
-    if (sender == mSideViewWidget) {
-        mLogicParameters->target.height = mLogic->validateTargetHeight(mSideViewWidgetParameters->target.height);
-        mLogicParameters->target.distance = mLogic->validateTargetDistance(mSideViewWidgetParameters->target.distance);
-        mLogicParameters->camera.height = mLogic->validateCameraHeight(mSideViewWidgetParameters->camera.height);
-        mLogicParameters->lowerBoundary.height = mSideViewWidgetParameters->lowerBoundary.height;
-
-    } else if (sender == mTopViewWidget) {
-        mLogicParameters->target.distance = mLogic->validateTargetDistance(mTopViewWidgetParameters->target.distance);
-        mLogicParameters->frustum.horizontalFov = mLogic->calculateHorizontalFovForGivenFovWidth(mTopViewWidgetParameters->target.fovWidth);
-        mLogicParameters->target.fovWidth = mTopViewWidgetParameters->target.fovWidth;
-    }
-
-    update();
-}
-
-void Controller::onZoom(int i)
-{
-    if (i < 0) {
-        setMeterToPixelRatio(mZoomStepSize * mMeterToPixelRatio);
-    } else if (i > 0) {
-        setMeterToPixelRatio(mMeterToPixelRatio / mZoomStepSize);
+    else
+    {
+        mConverter->ZoomOut();
     }
 }
 
-void Controller::onPan(int x, int y)
+void FovCalculator::Controller::OnUserRequestsTargetDistanceChange(const QPointF& delta)
 {
-    setOrigin(QPointF(mOrigin.x() + x, mOrigin.y() + y));
-}
-
-void Controller::setMeterToPixelRatio(float newMeterToPixelRatio)
-{
-    if (newMeterToPixelRatio < 2.0 || newMeterToPixelRatio > 512.0f) {
-        return;
+    float worldDelta = mConverter->ConvertDistanceFromGuiToWorld(delta.x());
+    float newTargetDistance = mLogic->GetTargetDistance() + worldDelta;
+    if (0.1f < newTargetDistance)
+    {
+        float validatedTargetDistance = mLogic->ValidateTargetDistance(newTargetDistance);
+        mLogic->SetTargetDistance(validatedTargetDistance);
+        Update();
     }
-
-    mMeterToPixelRatio = newMeterToPixelRatio;
-
-    mSideViewWidget->setMeterToPixelRatio(newMeterToPixelRatio);
-    mTopViewWidget->setMeterToPixelRatio(newMeterToPixelRatio);
-
-    update();
 }
 
-void Controller::setOrigin(QPointF newOrigin)
+void FovCalculator::Controller::OnUserRequestsFovWidthChange(float delta)
 {
-    mOrigin = newOrigin;
+    float worldDelta = mConverter->ConvertDistanceFromGuiToWorld(delta);
+    float newFovWidth = mLogic->GetFovWidth() + worldDelta;
+    if (0.1f <= newFovWidth)
+    {
+        float hfov = mLogic->CalculateHorizontalFovForGivenFovWidth(newFovWidth);
+        mLogic->SetHorizontalFov(hfov);
+        Update();
+    }
+}
 
-    mSideViewWidget->setOrigin(newOrigin);
-    mTopViewWidget->setOrigin(newOrigin);
+void FovCalculator::Controller::OnUserRequestsTargetHeightChange(const QPointF& delta)
+{
+    float worldDelta = mConverter->ConvertDistanceFromGuiToWorld(-delta.y());
+    float newTargetHeight = mLogic->GetTargetHeight() + worldDelta;
+    if (0.1f <= newTargetHeight)
+    {
+        float validatedTargetHeight = mLogic->ValidateTargetHeight(newTargetHeight);
+        mLogic->SetTargetHeight(validatedTargetHeight);
+        Update();
+    }
+}
 
-    update();
+void FovCalculator::Controller::OnUserRequestsCameraHeightChange(const QPointF& delta)
+{
+    float worldDelta = mConverter->ConvertDistanceFromGuiToWorld(-delta.y());
+    float newCameraHeight = mLogic->GetCameraHeight() + worldDelta;
+    if (0.1f <= newCameraHeight)
+    {
+        float validatedCameraHeight = mLogic->ValidateCameraHeight(newCameraHeight);
+        mLogic->SetCameraHeight(validatedCameraHeight);
+        Update();
+    }
+}
+
+void FovCalculator::Controller::OnUserRequestsLowerBoundaryHeightChange(const QPointF& delta)
+{
+    float worldDelta = mConverter->ConvertDistanceFromGuiToWorld(-delta.y());
+    float newLowerBoundaryHeight = mLogic->GetLowerBoundaryHeight() + worldDelta;
+    newLowerBoundaryHeight = qBound(0.0f, newLowerBoundaryHeight, mLogic->GetTargetHeight());
+
+    mLogic->SetLowerBoundaryHeight(newLowerBoundaryHeight);
+    Update();
 }

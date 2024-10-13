@@ -2,295 +2,249 @@
 
 #include "Core/Constants.h"
 
-#include <QMouseEvent>
+#include <QInputEvent>
 #include <QPainter>
 #include <QPainterPath>
 
-TopViewWidget::TopViewWidget(QWidget *parent)
+FovCalculator::TopViewWidget::TopViewWidget(QWidget* parent)
     : QWidget(parent)
-    , mMousePressedOnCanvas(false)
 {
-    // General GUI
-    {
-        QVector<qreal> dashes;
-        dashes << 2 << 2;
-        mDashedPen.setDashPattern(dashes);
-        mDashedPen.setStyle(Qt::DashLine);
+    mCrossPatternBursh.setStyle(Qt::BrushStyle::CrossPattern);
+    mCrossPatternBursh.setColor(QColor(32, 32, 32));
 
-        mLabelFont = QFont();
-        mLabelFont.setPixelSize(10);
-        mLabelColor = QColor(100, 100, 100);
+    mDashedPen.setDashPattern(QVector<qreal>{ 3, 3 });
+    mDashedPen.setColor(PRIMARY_COLOR);
+    mDashedPen.setStyle(Qt::DashLine);
+    mDashedPen.setWidthF(1.5f);
 
-        mCrossedPatternBursh.setStyle(Qt::BrushStyle::CrossPattern);
-        mCrossedPatternBursh.setColor(QColor(210, 210, 210));
-    }
+    mSolidPen.setWidthF(1.5f);
+    mSolidPen.setCapStyle(Qt::FlatCap);
 
-    // Target Handle
-    {
-        QPen pen = QColor(0, 0, 0);
-        pen.setWidth(1);
-        pen.setJoinStyle(Qt::PenJoinStyle::MiterJoin);
-        mTargetHandle.setPen(pen);
-        mTargetHandle.setBrush(QColor(255, 128, 0));
-        mTargetHandle.setHoveredBrush(QColor(255, 255, 255));
-        mTargetHandle.setPressedBrush(QColor(0, 255, 0));
-        mTargetHandle.setSize(10, 10);
-    }
+    mCameraHandle.SetBrush(QColor(63, 150, 157));
+    mCameraHandle.SetSize(HANDLE_SIZE, HANDLE_SIZE);
 
-    {
-        QPen pen = QColor(0, 0, 0);
-        pen.setWidth(1);
-        pen.setJoinStyle(Qt::PenJoinStyle::MiterJoin);
-        mFovWidthHandleTop.setPen(pen);
-        mFovWidthHandleTop.setBrush(QColor(255, 0, 0));
-        mFovWidthHandleTop.setHoveredBrush(QColor(255, 255, 255));
-        mFovWidthHandleTop.setPressedBrush(QColor(0, 255, 0));
-        mFovWidthHandleTop.setSize(10, 10);
-    }
+    mTargetHandle.SetBrush(QColor(185, 95, 0));
+    mTargetHandle.SetHoveredBrush(QColor(255, 255, 255));
+    mTargetHandle.SetPressedBrush(QColor(0, 255, 0));
+    mTargetHandle.SetSize(HANDLE_SIZE, HANDLE_SIZE);
 
-    {
-        QPen pen = QColor(0, 0, 0);
-        pen.setWidth(1);
-        pen.setJoinStyle(Qt::PenJoinStyle::MiterJoin);
-        mFovWidthHandleBottom.setPen(pen);
-        mFovWidthHandleBottom.setBrush(QColor(255, 0, 0));
-        mFovWidthHandleBottom.setHoveredBrush(QColor(255, 255, 255));
-        mFovWidthHandleBottom.setPressedBrush(QColor(0, 255, 0));
-        mFovWidthHandleBottom.setSize(10, 10);
-    }
+    mFovWidthHandleTop.SetBrush(QColor(128, 0, 0));
+    mFovWidthHandleTop.SetHoveredBrush(QColor(255, 255, 255));
+    mFovWidthHandleTop.SetPressedBrush(QColor(0, 255, 0));
+    mFovWidthHandleTop.SetSize(HANDLE_SIZE, HANDLE_SIZE);
 
-    {
-        QPen pen = QColor(0, 0, 0);
-        pen.setWidth(1);
-        pen.setJoinStyle(Qt::PenJoinStyle::MiterJoin);
-        mCameraHandle.setPen(pen);
-        mCameraHandle.setBrush(QColor(63, 150, 157));
-        mCameraHandle.setSize(10, 10);
-    }
+    mFovWidthHandleBottom.SetBrush(QColor(128, 0, 0));
+    mFovWidthHandleBottom.SetHoveredBrush(QColor(255, 255, 255));
+    mFovWidthHandleBottom.SetPressedBrush(QColor(0, 255, 0));
+    mFovWidthHandleBottom.SetSize(HANDLE_SIZE, HANDLE_SIZE);
+
+    mLabelFont = QFont();
+    mLabelFont.setPixelSize(10);
+    mLabelColor = PRIMARY_COLOR;
 
     setMouseTracking(true);
     setFocusPolicy(Qt::FocusPolicy::ClickFocus);
 }
 
-void TopViewWidget::setParameters(Controller::TopViewWidgetParameters *newParameters)
+void FovCalculator::TopViewWidget::paintEvent(QPaintEvent* event)
 {
-    mParameters = newParameters;
+    UpdateHandles();
+    DrawCrossPattern();
+    DrawRegions();
+    DrawTargetIntersections();
+    DrawGroundIntersections();
+    DrawHandles();
+    DrawLabels();
 }
 
-void TopViewWidget::refresh()
+void FovCalculator::TopViewWidget::UpdateHandles()
 {
-    updateHandles();
-    update();
+    mCameraHandle.SetCenter(mOrigin.x(), mOrigin.y());
+    mTargetHandle.SetCenter(mTargetIntersections[0].x(), mOrigin.y());
+    mFovWidthHandleTop.SetCenter(mTargetIntersections[0]);
+    mFovWidthHandleBottom.SetCenter(mTargetIntersections[3]);
 }
 
-QPointF TopViewWidget::mapFrom3d(float x, float y)
-{
-    return QPointF(mOrigin.x() + x * mMeterToPixelRatio, mOrigin.y() - y * mMeterToPixelRatio);
-}
-
-QPointF TopViewWidget::mapFrom3d(Eigen::Vector3f vector)
-{
-    return mapFrom3d(vector.x(), vector.y());
-}
-
-Eigen::Vector3f TopViewWidget::mapFrom2d(QPointF point)
-{
-    return mapFrom2d(point.x(), point.y());
-}
-
-Eigen::Vector3f TopViewWidget::mapFrom2d(float x, float y)
-{
-    Eigen::Vector3f vector;
-
-    vector[0] = (x - mOrigin.x()) / mMeterToPixelRatio;
-    vector[1] = (mOrigin.y() - y) / mMeterToPixelRatio;
-    vector[2] = 0;
-    return vector;
-}
-
-void TopViewWidget::updateHandles()
-{
-    mTargetHandle.setCenter(mapFrom3d(mParameters->target.distance, 0));
-    mFovWidthHandleTop.setCenter(mapFrom3d(mParameters->target.distance, 0.5 * mParameters->target.fovWidth));
-    mFovWidthHandleBottom.setCenter(mapFrom3d(mParameters->target.distance, -0.5 * mParameters->target.fovWidth));
-    mCameraHandle.setCenter(mOrigin.x(), mOrigin.y());
-}
-
-void TopViewWidget::updateCursor()
-{
-    bool horizontalCursor = mTargetHandle.hovered() || mTargetHandle.pressed();
-    bool verticalCursor = mFovWidthHandleTop.hovered() || mFovWidthHandleTop.pressed();
-    verticalCursor = verticalCursor || mFovWidthHandleBottom.hovered() || mFovWidthHandleBottom.pressed();
-
-    if (verticalCursor)
-        this->setCursor(Qt::SizeVerCursor);
-    else if (horizontalCursor)
-        this->setCursor(Qt::SizeHorCursor);
-    else
-        this->setCursor(Qt::ArrowCursor);
-}
-
-void TopViewWidget::paintEvent(QPaintEvent *)
+void FovCalculator::TopViewWidget::DrawCrossPattern()
 {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing, false);
+    painter.fillRect(0, 0, width(), height(), mCrossPatternBursh);
+}
 
-    // Draw crossed pattern
-    painter.fillRect(0, 0, width(), height(), mCrossedPatternBursh);
-
-    // Regions
+void FovCalculator::TopViewWidget::DrawRegions()
+{
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing, true);
+    for (int i = 0; i < 7; i++)
     {
-        painter.setRenderHint(QPainter::Antialiasing, true);
-        for (int i = 0; i < 7; i++) {
-            if (mParameters->regions[i].visible) {
-                QPainterPath path;
-                path.addPolygon(mParameters->regions[i].region);
+        if (mRegions[i].empty() == false)
+        {
+            QPainterPath path;
+            path.addPolygon(mRegions[i]);
 
-                QBrush brush;
-                brush.setStyle(Qt::BrushStyle::SolidPattern);
-                brush.setColor(REGION_COLORS[i]);
-
-                painter.fillPath(path, brush);
-            }
+            QBrush brush;
+            brush.setStyle(Qt::BrushStyle::SolidPattern);
+            brush.setColor(REGION_COLORS[i]);
+            painter.fillPath(path, brush);
         }
     }
-
-    {
-        // Draw ground and frustum intersection
-        painter.setRenderHint(QPainter::Antialiasing, true);
-        QPen pen;
-        pen.setColor(QColor(128, 128, 128));
-        pen.setWidthF(1.0f);
-        pen.setCapStyle(Qt::FlatCap);
-        painter.setPen(pen);
-
-        for (int i = 0; i < 4; i++)
-            painter.drawLine(mParameters->ground.intersections[i], mParameters->ground.intersections[(i + 1) % 4]);
-    }
-
-    // Draw frustum and target intersection
-    {
-        painter.setRenderHint(QPainter::Antialiasing, true);
-        QPen pen;
-        pen.setColor(QColor(0, 102, 213));
-        pen.setWidth(1.0f);
-        pen.setCapStyle(Qt::FlatCap);
-        painter.setPen(pen);
-        painter.drawLine(mOrigin, mParameters->ground.intersections[1]);
-        painter.drawLine(mOrigin, mParameters->ground.intersections[2]);
-        painter.drawLine(mOrigin, mParameters->target.intersections[0]);
-        painter.drawLine(mOrigin, mParameters->target.intersections[3]);
-
-        mDashedPen.setColor(QColor(128, 128, 128));
-        painter.setPen(mDashedPen);
-        painter.drawLine(mParameters->target.intersections[0], mParameters->ground.intersections[0]);
-        painter.drawLine(mParameters->target.intersections[3], mParameters->ground.intersections[3]);
-    }
-
-    // Draw fov width line
-    {
-        painter.setRenderHint(QPainter::Antialiasing, false);
-        QPen pen;
-        pen.setColor(QColor(0, 128, 0));
-        pen.setWidthF(3.0f);
-        pen.setCapStyle(Qt::FlatCap);
-        painter.setPen(pen);
-        painter.drawLine(mFovWidthHandleBottom.getCenter(1, 0), mFovWidthHandleTop.getCenter(1, 0));
-    }
-
-    // Draw fov width label
-    {
-        painter.setPen(QColor(0, 128, 0));
-        painter.setFont(mLabelFont);
-        QPointF point = QPointF(mTargetHandle.getCenter().x() + 12, mTargetHandle.getCenter().y() + mLabelFont.pixelSize() / 2);
-        painter.drawText(point, QString::number(mParameters->target.fovWidth, 'f', 2) + " m");
-    }
-
-    // Fill horizontal fov label
-    {
-        painter.setPen(QColor(0, 0, 0));
-        painter.setFont(mLabelFont);
-        QPointF point(mCameraHandle.getCenter().x() - 50, mCameraHandle.getCenter().y() + mLabelFont.pixelSize() / 2);
-        painter.drawText(point, QString::number(mParameters->camera.horizontalFov, 'f', 2) + " °");
-    }
-
-    mCameraHandle.draw(this);
-    mTargetHandle.draw(this);
-    mFovWidthHandleTop.draw(this);
-    mFovWidthHandleBottom.draw(this);
 }
 
-void TopViewWidget::mousePressEvent(QMouseEvent *event)
+void FovCalculator::TopViewWidget::DrawGroundIntersections()
 {
-    if (mTargetHandle.contains(event->pos())) {
-        mTargetHandle.setPressed(true);
-    } else if (mFovWidthHandleTop.contains(event->pos())) {
-        mFovWidthHandleTop.setPressed(true);
-    } else if (mFovWidthHandleBottom.contains(event->pos())) {
-        mFovWidthHandleBottom.setPressed(true);
-    } else {
-        mMousePressedOnCanvas = true;
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing, true);
+    mSolidPen.setColor(PRIMARY_COLOR);
+    painter.setPen(mSolidPen);
+
+    for (int i = 0; i < 4; i++)
+    {
+        painter.drawLine(mGroundIntersections[i], mGroundIntersections[(i + 1) % 4]);
+    }
+}
+
+void FovCalculator::TopViewWidget::DrawTargetIntersections()
+{
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing, true);
+    mSolidPen.setColor(SECONDARY_COLOR);
+    painter.setPen(mSolidPen);
+    painter.drawLine(mOrigin, mGroundIntersections[1]);
+    painter.drawLine(mOrigin, mGroundIntersections[2]);
+    painter.drawLine(mOrigin, mTargetIntersections[0]);
+    painter.drawLine(mOrigin, mTargetIntersections[3]);
+
+    painter.setPen(mDashedPen);
+    painter.drawLine(mTargetIntersections[0], mGroundIntersections[0]);
+    painter.drawLine(mTargetIntersections[3], mGroundIntersections[3]);
+}
+
+void FovCalculator::TopViewWidget::DrawHandles()
+{
+    // Fov Width Line
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing, false);
+    QPen pen;
+    pen.setColor(SECONDARY_COLOR);
+    pen.setWidthF(3.0f);
+    pen.setCapStyle(Qt::FlatCap);
+    painter.setPen(pen);
+    painter.drawLine(mFovWidthHandleBottom.GetCenter(1, 0), mFovWidthHandleTop.GetCenter(1, 0));
+
+    mCameraHandle.Draw(this);
+    mTargetHandle.Draw(this);
+    mFovWidthHandleTop.Draw(this);
+    mFovWidthHandleBottom.Draw(this);
+}
+
+void FovCalculator::TopViewWidget::DrawLabels()
+{
+    QPainter painter(this);
+
+    painter.setPen(QColor(0, 128, 0));
+    painter.setFont(mLabelFont);
+    QPointF point0(mTargetHandle.GetCenter().x() + 12, mTargetHandle.GetCenter().y() + mLabelFont.pixelSize() / 2);
+    painter.drawText(point0, QString::number(mFovWidth, 'f', 2) + " m");
+
+    painter.setPen(PRIMARY_COLOR);
+    painter.setFont(mLabelFont);
+    QPointF point1(mCameraHandle.GetCenter().x() - 50, mCameraHandle.GetCenter().y() + mLabelFont.pixelSize() / 2);
+    painter.drawText(point1, QString::number(mHorizontalFov, 'f', 2) + " °");
+}
+
+void FovCalculator::TopViewWidget::UpdateCursor()
+{
+    bool horizontalCursor = mTargetHandle.GetHovered() || mTargetHandle.GetPressed();
+    bool verticalCursor = mFovWidthHandleTop.GetHovered() || mFovWidthHandleTop.GetPressed();
+    verticalCursor = verticalCursor || mFovWidthHandleBottom.GetHovered() || mFovWidthHandleBottom.GetPressed();
+
+    if (verticalCursor)
+        setCursor(Qt::SizeVerCursor);
+    else if (horizontalCursor)
+        setCursor(Qt::SizeHorCursor);
+    else
+        setCursor(Qt::ArrowCursor);
+}
+
+void FovCalculator::TopViewWidget::mousePressEvent(QMouseEvent* event)
+{
+
+    if (mTargetHandle.Contains(event->pos()))
+    {
+        mTargetHandle.SetPressed(true);
+    }
+    else if (mFovWidthHandleTop.Contains(event->pos()))
+    {
+        mFovWidthHandleTop.SetPressed(true);
+    }
+    else if (mFovWidthHandleBottom.Contains(event->pos()))
+    {
+        mFovWidthHandleBottom.SetPressed(true);
+    }
+    else
+    {
+        mUserRequestsPan = true;
     }
 
-    mOldMousePosition = event->pos();
+    mPreviousMousePosition = event->position();
+    UpdateCursor();
     update();
 }
 
-void TopViewWidget::mouseMoveEvent(QMouseEvent *event)
+void FovCalculator::TopViewWidget::mouseMoveEvent(QMouseEvent* event)
 {
-    mTargetHandle.setHovered(mTargetHandle.contains(event->pos()));
-    mFovWidthHandleTop.setHovered(mFovWidthHandleTop.contains(event->pos()));
-    mFovWidthHandleBottom.setHovered(mFovWidthHandleBottom.contains(event->pos()));
+    mTargetHandle.SetHovered(mTargetHandle.Contains(event->pos()));
+    mFovWidthHandleTop.SetHovered(mFovWidthHandleTop.Contains(event->pos()));
+    mFovWidthHandleBottom.SetHovered(mFovWidthHandleBottom.Contains(event->pos()));
 
-    bool isDirty = false;
+    QPointF delta = event->position() - mPreviousMousePosition;
 
-    if (mTargetHandle.pressed()) {
-        isDirty = true;
-        mParameters->target.distance += (event->pos() - mOldMousePosition).x() / mMeterToPixelRatio;
+    if (mTargetHandle.GetPressed())
+    {
+        emit UserRequestsTargetDistanceChange(delta);
+    }
+    if (mFovWidthHandleTop.GetPressed() || mFovWidthHandleBottom.GetPressed())
+    {
+        emit UserRequestsFovWidthChange(-2 * delta.y());
+    }
+    if (mUserRequestsPan)
+    {
+        emit UserRequestsPan(delta);
     }
 
-    if (mFovWidthHandleTop.pressed() || mFovWidthHandleBottom.pressed()) {
-        isDirty = true;
-        mParameters->target.fovWidth += 2 * (mOldMousePosition - event->pos()).y() / mMeterToPixelRatio;
-    }
-
-    if (isDirty)
-        emit dirty();
-
-    else if (mMousePressedOnCanvas)
-        emit pan((event->pos() - mOldMousePosition).x(), (event->pos() - mOldMousePosition).y());
-
-    if (!isDirty) // dirty signal will call update anyway
-        update();
-
-    mOldMousePosition = event->pos();
-    updateCursor();
-    Eigen::Vector3f position = mapFrom2d(event->pos());
-    emit cursorPositionChanged(QPointF(position.x(), position.y()));
-}
-
-void TopViewWidget::mouseReleaseEvent(QMouseEvent *event)
-{
-    mTargetHandle.setPressed(false);
-    mFovWidthHandleTop.setPressed(false);
-    mFovWidthHandleBottom.setPressed(false);
-    mMousePressedOnCanvas = false;
-
-    mOldMousePosition = event->pos();
+    mPreviousMousePosition = event->position();
+    UpdateCursor();
     update();
 }
 
-void TopViewWidget::wheelEvent(QWheelEvent *event)
+void FovCalculator::TopViewWidget::mouseReleaseEvent(QMouseEvent*)
 {
-    emit zoom(event->angleDelta().y());
+    mUserRequestsPan = false;
+    mTargetHandle.SetPressed(false);
+    mFovWidthHandleTop.SetPressed(false);
+    mFovWidthHandleBottom.SetPressed(false);
+
+    UpdateCursor();
+    update();
 }
 
-void TopViewWidget::setMeterToPixelRatio(float newMeterToPixelRatio)
+void FovCalculator::TopViewWidget::wheelEvent(QWheelEvent* event)
 {
-    mMeterToPixelRatio = newMeterToPixelRatio;
+    emit WheelMoved(event);
 }
 
-void TopViewWidget::setOrigin(QPointF newOrigin)
+void FovCalculator::TopViewWidget::SetGroundIntersection(int index, const QPointF& point)
 {
-    mOrigin = newOrigin;
+    mGroundIntersections[index] = point;
+}
+
+void FovCalculator::TopViewWidget::SetTargetIntersection(int index, const QPointF& point)
+{
+    mTargetIntersections[index] = point;
+}
+
+void FovCalculator::TopViewWidget::SetRegion(int index, const QPolygonF& region)
+{
+    mRegions[index] = region;
 }

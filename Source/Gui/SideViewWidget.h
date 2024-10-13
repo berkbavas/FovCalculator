@@ -1,68 +1,84 @@
-#ifndef SIDEVIEWWIDGET_H
-#define SIDEVIEWWIDGET_H
+#pragma once
 
-#include "Core/Controller.h"
 #include "Gui/Handle.h"
+#include "Util/Macros.h"
 
 #include <QWidget>
 
-class SideViewWidget : public QWidget
+namespace FovCalculator
 {
-    Q_OBJECT
-public:
-    explicit SideViewWidget(QWidget *parent = nullptr);
-    void setParameters(Controller::SideViewWidgetParameters *newParameters);
+    class SideViewWidget : public QWidget
+    {
+        Q_OBJECT
+      public:
+        explicit SideViewWidget(QWidget* parent = nullptr);
 
-    void setOrigin(QPointF newOrigin);
-    void setMeterToPixelRatio(float newMeterToPixelRatio);
+        void SetGroundIntersection(int index, const QPointF& point);
+        void SetTargetIntersection(int index, const QPointF& point);
+        void SetLowerBoundaryIntersection(int index, const QPointF& point);
+        void SetRegion(int index, const QPolygonF& region);
 
-signals:
-    void dirty();
-    void zoom(int);
-    void pan(int x, int y);
-    void cursorPositionChanged(QPointF position);
+      signals:
+        void UserRequestsPan(const QPointF& delta);
+        void WheelMoved(QWheelEvent* event);
+        void UserRequestsTargetHeightChange(const QPointF& delta);
+        void UserRequestsTargetDistanceChange(const QPointF& delta);
+        void UserRequestsCameraHeightChange(const QPointF& delta);
+        void UserRequestsLowerBoundaryHeightChange(const QPointF& delta);
 
-public slots:
-    void refresh();
-    QPointF mapFrom3d(float distance, float height);
-    QPointF mapFrom3d(Eigen::Vector3f vector);
-    Eigen::Vector3f mapFrom2d(QPointF point);
-    Eigen::Vector3f mapFrom2d(float x, float y);
+      private:
+        void paintEvent(QPaintEvent* event) override;
+        void mousePressEvent(QMouseEvent*) override;
+        void mouseMoveEvent(QMouseEvent*) override;
+        void mouseReleaseEvent(QMouseEvent*) override;
+        void wheelEvent(QWheelEvent* event) override;
 
-private:
-    int findSuitableTickmarkPixelStep(float meterToPixelRatio);
-    void updateHandles();
-    void updateCursor();
+        void UpdateHandles();
+        void DrawHorizontalAxis();
+        void DrawVerticalAxis();
+        void DrawRegions();
+        void DrawTargetStuff();
+        void DrawTiltAngleStuff();
+        void DrawHandlers();
 
-    void paintEvent(QPaintEvent *) override;
-    void mousePressEvent(QMouseEvent *) override;
-    void mouseMoveEvent(QMouseEvent *) override;
-    void mouseReleaseEvent(QMouseEvent *) override;
-    void wheelEvent(QWheelEvent *) override;
+        void UpdateCursor();
 
-    Controller::SideViewWidgetParameters *mParameters;
+        int FindSuitableTickmarkPixelStep(float meterToPixelRatio);
 
-    Handle mTargetHeightHandle;
-    Handle mTargetDistanceHandle;
-    Handle mCameraHeightHandle;
-    Handle mLowerBoundaryHandle;
+        DEFINE_MEMBER(QPointF, Origin);
+        DEFINE_MEMBER(float, MeterToPixelRatio);
+        DEFINE_MEMBER(float, CameraHeight);
+        DEFINE_MEMBER(float, TargetDistance);
+        DEFINE_MEMBER(float, TargetHeight);
+        DEFINE_MEMBER(float, LowerBoundaryDistance);
+        DEFINE_MEMBER(float, LowerBoundaryHeight);
+        DEFINE_MEMBER(float, TiltAngle);
+        DEFINE_MEMBER(QPointF, BisectorIntersection);
+        DEFINE_MEMBER(QPointF, OppositeBisectorIntersection);
 
-    QPoint mOldMousePosition;
-    bool mMousePressedOnCanvas;
+        QPointF mGroundIntersections[4];
+        QPointF mTargetIntersections[4];
+        QPointF mLowerBoundaryIntersections[4];
 
-    QPen mDashedPen;
-    QFont mLabelFont;
-    QColor mLabelColor;
+        Handle mTargetHeightHandle;
+        Handle mTargetDistanceHandle;
+        Handle mCameraHeightHandle;
+        Handle mLowerBoundaryHandle;
 
-    QPointF mOrigin;
-    float mMeterToPixelRatio;
+        QPoint mPreviousMousePosition;
+        bool mUserRequestsPan{ false };
 
-    int mMinorTickmarkCount;
-    int mTickmarkPixelStep;
+        QPen mDashedPen;
+        QPen mSolidPen;
+        QFont mLabelFont;
+        QColor mLabelColor;
 
-    QPen mAxisPen;
-    QSizeF mTickmarkSize;
-    QColor mTickmarkColor;
-};
+        int mMinorTickmarkCount;
+        int mTickmarkPixelStep;
+        QPen mAxisPen;
+        QSizeF mTickmarkSize;
+        QColor mTickmarkColor;
 
-#endif // SIDEVIEWWIDGET_H
+        QPolygonF mRegions[7];
+    };
+}

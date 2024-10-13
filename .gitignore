@@ -1,3 +1,4 @@
+.vscode
 *.user
-build
-Build
+build*
+Build*
