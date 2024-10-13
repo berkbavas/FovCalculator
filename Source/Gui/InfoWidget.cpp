@@ -34,12 +34,7 @@ void FovCalculator::InfoWidget::paintGL()
     QtImGui::newFrame();
 
     ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
-    ImGui::Begin("Debug", nullptr, ImGuiWindowFlags_NoMove                    //
-                                       | ImGuiWindowFlags_NoCollapse          //
-                                       | ImGuiWindowFlags_NoTitleBar          //
-                                       | ImGuiWindowFlags_AlwaysAutoResize    //
-                                       | ImGuiWindowFlags_HorizontalScrollbar //
-    );
+    ImGui::Begin("Debug", nullptr);
 
     {
         ImGui::Text("Camera");
@@ -50,10 +45,10 @@ void FovCalculator::InfoWidget::paintGL()
         ImGui::InputFloat("Tilt Angle (°) ", &mLogic->GetTiltAngle_NonConst());
         ImGui::EndDisabled();
 
-        if (ImGui::InputFloat("Sensor Width (px)", &mLogic->GetSensorWidth_NonConst(), 0.1, 10))
+        if (ImGui::SliderFloat("Sensor Width (px)", &mLogic->GetSensorWidth_NonConst(), 640, 10000))
             emit GuiNeedsUpdate();
 
-        if (ImGui::InputFloat("Sensor Height (px)", &mLogic->GetSensorHeight_NonConst(), 0.1, 10))
+        if (ImGui::SliderFloat("Sensor Height (px)", &mLogic->GetSensorHeight_NonConst(), 480, 10000))
             emit GuiNeedsUpdate();
 
         ImGui::BeginDisabled();
