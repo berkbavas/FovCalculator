@@ -80,7 +80,7 @@ void FovCalculator::SideViewWidget::DrawTargetStuff()
     painter.setPen(SECONDARY_COLOR);
     painter.setFont(mLabelFont);
     QPointF point = QPointF(mTargetHeightHandle.GetCenter().x() + 8, (mTargetDistanceHandle.GetCenter().y() + mTargetHeightHandle.GetCenter().y() + mLabelFont.pixelSize()) / 2);
-    painter.drawText(point, QString::number(mTargetHeight, 'f', 2) + " m");
+    painter.drawText(point, QString::number(mTargetHeight / mMeterToPixelRatio, 'f', 2) + " m");
 
     // Bisectors
     mDashedPen.setColor(SECONDARY_COLOR);
