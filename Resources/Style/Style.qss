@@ -1,9 +1,0 @@
-QLineEdit {
-	border: 1px solid #c0c0c0;
-	border-radius: 2px;
-	padding: 2px;
-}
-
-QGroupBox {
-	font-weight: bold
-}
