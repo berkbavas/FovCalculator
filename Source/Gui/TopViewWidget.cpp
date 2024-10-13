@@ -127,7 +127,7 @@ void FovCalculator::TopViewWidget::DrawHandles()
     painter.setRenderHint(QPainter::Antialiasing, false);
     QPen pen;
     pen.setColor(SECONDARY_COLOR);
-    pen.setWidthF(3.0f);
+    pen.setWidthF(2.0f);
     pen.setCapStyle(Qt::FlatCap);
     painter.setPen(pen);
     painter.drawLine(mFovWidthHandleBottom.GetCenter(1, 0), mFovWidthHandleTop.GetCenter(1, 0));
@@ -142,7 +142,7 @@ void FovCalculator::TopViewWidget::DrawLabels()
 {
     QPainter painter(this);
 
-    painter.setPen(QColor(0, 128, 0));
+    painter.setPen(SECONDARY_COLOR);
     painter.setFont(mLabelFont);
     QPointF point0(mTargetHandle.GetCenter().x() + 12, mTargetHandle.GetCenter().y() + mLabelFont.pixelSize() / 2);
     painter.drawText(point0, QString::number(mFovWidth, 'f', 2) + " m");

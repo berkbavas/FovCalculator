@@ -69,7 +69,7 @@ void FovCalculator::SideViewWidget::DrawTargetStuff()
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing, false);
     QPen pen(SECONDARY_COLOR);
-    pen.setWidthF(3);
+    pen.setWidthF(2.0f);
     pen.setCapStyle(Qt::FlatCap);
     painter.setPen(pen);
     painter.drawLine(mTargetDistanceHandle.GetCenter(1, 0), mTargetHeightHandle.GetCenter(1, 0));

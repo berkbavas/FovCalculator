@@ -11,7 +11,7 @@ namespace FovCalculator
 
     constexpr float HANDLE_SIZE = 10.0f; // pixels
     constexpr QColor PRIMARY_COLOR = QColor(128, 128, 128);
-    constexpr QColor SECONDARY_COLOR = QColor(55, 126, 171);
+    constexpr QColor SECONDARY_COLOR = QColor(0, 65, 135);
 
     constexpr float INITIAL_CAMERA_HEIGHT = 5.0f;           // meters
     constexpr float INITIAL_CAMERA_SENSOR_WIDTH = 1920.0f;  // px
