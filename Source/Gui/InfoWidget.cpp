@@ -34,7 +34,11 @@ void FovCalculator::InfoWidget::paintGL()
     QtImGui::newFrame();
 
     ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
-    ImGui::Begin("Debug", nullptr);
+    ImGui::Begin("Debug", nullptr, ImGuiWindowFlags_NoMove                 //
+                                       | ImGuiWindowFlags_NoCollapse       //
+                                       | ImGuiWindowFlags_NoTitleBar       //
+                                       | ImGuiWindowFlags_AlwaysAutoResize //
+                                       | ImGuiWindowFlags_HorizontalScrollbar);
 
     {
         ImGui::Text("Camera");
@@ -91,7 +95,6 @@ void FovCalculator::InfoWidget::paintGL()
     ImGui::Spacing();
 
     {
-
         ImGui::Text("Lower Boundary");
         if (ImGui::InputFloat("Height (m)##LowerBoundary", &mLogic->GetLowerBoundaryHeight_NonConst(), 0.1, 10))
             emit GuiNeedsUpdate();
