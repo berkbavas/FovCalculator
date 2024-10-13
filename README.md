@@ -12,3 +12,6 @@ Detection, observation, recognition and identification limit calculator based on
 8) Run CMake `cmake ..`.
 9) Open `FovCalculator.sln` with `Visual Studio 2022`.
 10) Build & Run with `Release` configuration.
+
+## Video
+https://github.com/user-attachments/assets/6d7efaa6-2fa3-41c8-96f7-4d3574774060
