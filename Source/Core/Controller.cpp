@@ -219,7 +219,8 @@ void FovCalculator::Controller::OnUserRequestsLowerBoundaryHeightChange(const QP
 {
     float worldDelta = mConverter->ConvertDistanceFromGuiToWorld(-delta.y());
     float newLowerBoundaryHeight = mLogic->GetLowerBoundaryHeight() + worldDelta;
-    newLowerBoundaryHeight = qBound(0.0f, newLowerBoundaryHeight, mLogic->GetTargetHeight());
+    float upperBound = qMin(mLogic->GetCameraHeight(), mLogic->GetTargetHeight()) - 0.01;
+    newLowerBoundaryHeight = qBound(0.0f, newLowerBoundaryHeight, upperBound);
 
     mLogic->SetLowerBoundaryHeight(newLowerBoundaryHeight);
     Update();

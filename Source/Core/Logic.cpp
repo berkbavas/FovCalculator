@@ -16,6 +16,9 @@ void FovCalculator::Logic::Calculate()
     mHalfVerticalFovRadians = std::atan(std::tan(mHalfHorizontalFovRadians) / mAspectRatio);
     mVerticalFov = 2 * mHalfVerticalFovRadians * RAD_TO_DEG;
 
+    // Clamp
+    mLowerBoundaryHeight = qBound(0.0f, mLowerBoundaryHeight, qMin(mCameraHeight, mTargetHeight) - 0.01f);
+
     mTiltAngleRadians = mHalfVerticalFovRadians - std::atan2(mTargetHeight - mCameraHeight, mTargetDistance);
     if (mTiltAngleRadians > M_PI_2)
     {
