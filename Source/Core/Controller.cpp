@@ -232,8 +232,8 @@ void FovCalculator::Controller::OnUserRequestsFovWidthDeltaChange(float delta)
     {
         float hfov = mLogic->CalculateHorizontalFovForGivenFovWidth(newFovWidth);
         mLogic->SetHorizontalFov(hfov);
-        Update();
     }
+    Update();
 }
 
 void FovCalculator::Controller::OnUserRequestsTargetHeightDeltaChange(const QPointF& delta)
@@ -263,8 +263,9 @@ void FovCalculator::Controller::OnUserRequestsCameraHeightChange(float newHeight
     {
         float validatedCameraHeight = mLogic->ValidateCameraHeight(newHeight);
         mLogic->SetCameraHeight(validatedCameraHeight);
-        Update();
     }
+
+    Update();
 }
 
 void FovCalculator::Controller::OnUserRequestsTargetHeightChange(float newHeight)
@@ -273,8 +274,9 @@ void FovCalculator::Controller::OnUserRequestsTargetHeightChange(float newHeight
     {
         float validatedTargetHeight = mLogic->ValidateTargetHeight(newHeight);
         mLogic->SetTargetHeight(validatedTargetHeight);
-        Update();
     }
+
+    Update();
 }
 
 void FovCalculator::Controller::OnUserRequestsTargetDistanceChange(float newDistance)
@@ -283,8 +285,9 @@ void FovCalculator::Controller::OnUserRequestsTargetDistanceChange(float newDist
     {
         float validatedTargetDistance = mLogic->ValidateTargetDistance(newDistance);
         mLogic->SetTargetDistance(validatedTargetDistance);
-        Update();
     }
+
+    Update();
 }
 
 void FovCalculator::Controller::OnUserRequestsLowerBoundaryHeightChange(float newHeight)
