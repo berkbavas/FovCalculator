@@ -288,19 +288,21 @@ int FovCalculator::SideViewWidget::FindSuitableTickmarkPixelStep(float meterToPi
 
 void FovCalculator::SideViewWidget::mousePressEvent(QMouseEvent* event)
 {
-    if (mLowerBoundaryHandle.Contains(event->pos()))
+    QPointF mousePosition = event->position();
+
+    if (mLowerBoundaryHandle.Contains(mousePosition))
     {
         mLowerBoundaryHandle.SetPressed(true);
     }
-    else if (mTargetHeightHandle.Contains(event->pos()))
+    else if (mTargetHeightHandle.Contains(mousePosition))
     {
         mTargetHeightHandle.SetPressed(true);
     }
-    else if (mTargetDistanceHandle.Contains(event->pos()))
+    else if (mTargetDistanceHandle.Contains(mousePosition))
     {
         mTargetDistanceHandle.SetPressed(true);
     }
-    else if (mCameraHeightHandle.Contains(event->pos()))
+    else if (mCameraHeightHandle.Contains(mousePosition))
     {
         mCameraHeightHandle.SetPressed(true);
     }
@@ -309,44 +311,48 @@ void FovCalculator::SideViewWidget::mousePressEvent(QMouseEvent* event)
         mUserRequestsPan = true;
     }
 
-    mPreviousMousePosition = event->pos();
+    mPreviousMousePosition = mousePosition;
     UpdateCursor();
     update();
 }
 
 void FovCalculator::SideViewWidget::mouseMoveEvent(QMouseEvent* event)
 {
-    mTargetHeightHandle.SetHovered(mTargetHeightHandle.Contains(event->pos()));
-    mTargetDistanceHandle.SetHovered(mTargetDistanceHandle.Contains(event->pos()));
-    mCameraHeightHandle.SetHovered(mCameraHeightHandle.Contains(event->pos()));
-    mLowerBoundaryHandle.SetHovered(mLowerBoundaryHandle.Contains(event->pos()));
+    QPointF mousePosition = event->position();
 
-    QPointF delta = event->position() - mPreviousMousePosition;
+    mTargetHeightHandle.SetHovered(mTargetHeightHandle.Contains(mousePosition));
+    mTargetDistanceHandle.SetHovered(mTargetDistanceHandle.Contains(mousePosition));
+    mCameraHeightHandle.SetHovered(mCameraHeightHandle.Contains(mousePosition));
+    mLowerBoundaryHandle.SetHovered(mLowerBoundaryHandle.Contains(mousePosition));
+
+    QPointF delta = mousePosition - mPreviousMousePosition;
 
     if (mTargetHeightHandle.GetPressed())
     {
-        emit UserRequestsTargetHeightChange(delta);
+        emit UserRequestsTargetHeightDeltaChange(delta);
     }
     else if (mTargetDistanceHandle.GetPressed())
     {
-        emit UserRequestsTargetDistanceChange(delta);
+        emit UserRequestsTargetDistanceDeltaChange(delta);
     }
     else if (mCameraHeightHandle.GetPressed())
     {
-        emit UserRequestsCameraHeightChange(delta);
+        emit UserRequestsCameraHeightDeltaChange(delta);
     }
     else if (mLowerBoundaryHandle.GetPressed())
     {
-        emit UserRequestsLowerBoundaryHeightChange(delta);
+        emit UserRequestsLowerBoundaryHeightDeltaChange(delta);
     }
     else if (mUserRequestsPan)
     {
         emit UserRequestsPan(delta);
     }
 
-    mPreviousMousePosition = event->pos();
+    mPreviousMousePosition = mousePosition;
     UpdateCursor();
     update();
+
+    emit MouseMoved(mousePosition);
 }
 
 void FovCalculator::SideViewWidget::mouseReleaseEvent(QMouseEvent*)

@@ -8,10 +8,11 @@ bool FovCalculator::Handle::Contains(float x, float y)
     return mRectangle.contains(x, y);
 }
 
-bool FovCalculator::Handle::Contains(const QPoint& point)
+bool FovCalculator::Handle::Contains(const QPointF& point)
 {
-    return mRectangle.contains(point);
+    return mRectangle.contains(point.toPoint());
 }
+
 void FovCalculator::Handle::SetCenter(float x, float y)
 {
     mRectangle = QRect(x - 0.5f * mRectangle.width(), y - 0.5f * mRectangle.height(), mRectangle.width(), mRectangle.height());
@@ -73,6 +74,7 @@ void FovCalculator::Handle::SetHovered(bool newHovered)
 {
     mHovered = newHovered;
 }
+
 void FovCalculator::Handle::SetPen(const QPen& newPen)
 {
     mPen = newPen;

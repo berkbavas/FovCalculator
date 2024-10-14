@@ -19,13 +19,20 @@ namespace FovCalculator
       private:
         void OnUserRequestsPan(const QPointF& delta);
         void OnWheelMoved(QWheelEvent* event);
-        void OnUserRequestsTargetDistanceChange(const QPointF& delta);
-        void OnUserRequestsFovWidthChange(float delta);
-        void OnUserRequestsTargetHeightChange(const QPointF& delta);
-        void OnUserRequestsCameraHeightChange(const QPointF& delta);
-        void OnUserRequestsLowerBoundaryHeightChange(const QPointF& delta);
+        void OnUserRequestsTargetDistanceDeltaChange(const QPointF& delta);
+        void OnUserRequestsFovWidthDeltaChange(float delta);
+        void OnUserRequestsTargetHeightDeltaChange(const QPointF& delta);
+        void OnUserRequestsCameraHeightDeltaChange(const QPointF& delta);
+        void OnUserRequestsLowerBoundaryHeightDeltaChange(const QPointF& delta);
+        void OnMouseMoved(const QPointF& position);
+
+        void OnUserRequestsCameraHeightChange(float newHeight);
+        void OnUserRequestsTargetHeightChange(float newHeight);
+        void OnUserRequestsTargetDistanceChange(float newDistance);
+        void OnUserRequestsLowerBoundaryHeightChange(float newHeight);
 
         void Update();
+        void UpdateInfoWidget();
         void UpdateSideViewWidget();
         void UpdateTopViewWidget();
 

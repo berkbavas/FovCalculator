@@ -19,11 +19,11 @@ namespace FovCalculator
         void SetRegion(int index, const QPolygonF& region);
 
       signals:
-        void
-        UserRequestsPan(const QPointF& delta);
+        void UserRequestsPan(const QPointF& delta);
         void WheelMoved(QWheelEvent* event);
-        void UserRequestsTargetDistanceChange(const QPointF& delta);
-        void UserRequestsFovWidthChange(float delta);
+        void UserRequestsTargetDistanceDeltaChange(const QPointF& delta);
+        void UserRequestsFovWidthDeltaChange(float delta);
+        void MouseMoved(const QPointF& position);
 
       private:
         void paintEvent(QPaintEvent* event) override;

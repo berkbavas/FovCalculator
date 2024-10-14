@@ -13,24 +13,55 @@ FovCalculator::Controller::Controller(QObject* parent)
     mWindow = new Window;
 
     mInfoWidget = mWindow->GetInfoWidget();
-    mInfoWidget->SetLogic(mLogic);
 
     mTopViewWidget = mWindow->GetTopViewWidget();
     mSideViewWidget = mWindow->GetSideViewWidget();
-
-    connect(mInfoWidget, &InfoWidget::GuiNeedsUpdate, this, &Controller::Update);
-    connect(mTopViewWidget, &TopViewWidget::UserRequestsPan, this, &Controller::OnUserRequestsPan);
-    connect(mTopViewWidget, &TopViewWidget::UserRequestsTargetDistanceChange, this, &Controller::OnUserRequestsTargetDistanceChange);
-    connect(mTopViewWidget, &TopViewWidget::UserRequestsFovWidthChange, this, &Controller::OnUserRequestsFovWidthChange);
-    connect(mTopViewWidget, &TopViewWidget::WheelMoved, this, &Controller::OnWheelMoved);
     connect(mConverter, &Converter::GuiNeedsUpdate, this, &Controller::Update);
+
+    // connect(mInfoWidget, &InfoWidget::GuiNeedsUpdate, this, &Controller::Update);
+    connect(mTopViewWidget, &TopViewWidget::UserRequestsPan, this, &Controller::OnUserRequestsPan);
+    connect(mTopViewWidget, &TopViewWidget::UserRequestsTargetDistanceDeltaChange, this, &Controller::OnUserRequestsTargetDistanceDeltaChange);
+    connect(mTopViewWidget, &TopViewWidget::UserRequestsFovWidthDeltaChange, this, &Controller::OnUserRequestsFovWidthDeltaChange);
+    connect(mTopViewWidget, &TopViewWidget::WheelMoved, this, &Controller::OnWheelMoved);
+    connect(mTopViewWidget, &TopViewWidget::MouseMoved, this, &Controller::OnMouseMoved);
 
     connect(mSideViewWidget, &SideViewWidget::UserRequestsPan, this, &Controller::OnUserRequestsPan);
     connect(mSideViewWidget, &SideViewWidget::WheelMoved, this, &Controller::OnWheelMoved);
-    connect(mSideViewWidget, &SideViewWidget::UserRequestsTargetDistanceChange, this, &Controller::OnUserRequestsTargetDistanceChange);
-    connect(mSideViewWidget, &SideViewWidget::UserRequestsTargetHeightChange, this, &Controller::OnUserRequestsTargetHeightChange);
-    connect(mSideViewWidget, &SideViewWidget::UserRequestsCameraHeightChange, this, &Controller::OnUserRequestsCameraHeightChange);
-    connect(mSideViewWidget, &SideViewWidget::UserRequestsLowerBoundaryHeightChange, this, &Controller::OnUserRequestsLowerBoundaryHeightChange);
+    connect(mSideViewWidget, &SideViewWidget::UserRequestsTargetDistanceDeltaChange, this, &Controller::OnUserRequestsTargetDistanceDeltaChange);
+    connect(mSideViewWidget, &SideViewWidget::UserRequestsTargetHeightDeltaChange, this, &Controller::OnUserRequestsTargetHeightDeltaChange);
+    connect(mSideViewWidget, &SideViewWidget::UserRequestsCameraHeightDeltaChange, this, &Controller::OnUserRequestsCameraHeightDeltaChange);
+    connect(mSideViewWidget, &SideViewWidget::UserRequestsLowerBoundaryHeightDeltaChange, this, &Controller::OnUserRequestsLowerBoundaryHeightDeltaChange);
+    connect(mSideViewWidget, &SideViewWidget::MouseMoved, this, &Controller::OnMouseMoved);
+
+    connect(mInfoWidget, &InfoWidget::CameraHeightChanged, this, &Controller::OnUserRequestsCameraHeightChange);
+    connect(mInfoWidget, &InfoWidget::TargetHeightChanged, this, &Controller::OnUserRequestsTargetHeightChange);
+    connect(mInfoWidget, &InfoWidget::TargetDistanceChanged, this, &Controller::OnUserRequestsTargetDistanceChange);
+    connect(mInfoWidget, &InfoWidget::LowerBoundaryHeightChanged, this, &Controller::OnUserRequestsLowerBoundaryHeightChange);
+
+    connect(mInfoWidget, &InfoWidget::SensorWidthChanged, this, [this](float newValue)
+            {
+                mLogic->SetSensorWidth(newValue);
+                Update(); });
+
+    connect(mInfoWidget, &InfoWidget::SensorHeightChanged, this, [this](float newValue)
+            {
+                mLogic->SetSensorHeight(newValue);
+                Update(); });
+
+    connect(mInfoWidget, &InfoWidget::HorizontalFovChanged, this, [this](float newValue)
+            {
+                mLogic->SetHorizontalFov(newValue);
+                Update(); });
+
+    connect(mInfoWidget, &InfoWidget::ZNearChanged, this, [this](float newValue)
+            {
+                mLogic->SetZNear(newValue);
+                Update(); });
+
+    connect(mInfoWidget, &InfoWidget::ZFarChanged, this, [this](float newValue)
+            {
+                mLogic->SetZFar(newValue);
+                Update(); });
 }
 
 void FovCalculator::Controller::Run()
@@ -43,8 +74,27 @@ void FovCalculator::Controller::Update()
 {
     mLogic->Calculate();
 
+    UpdateInfoWidget();
     UpdateSideViewWidget();
     UpdateTopViewWidget();
+}
+
+void FovCalculator::Controller::UpdateInfoWidget()
+{
+    mInfoWidget->SetCameraHeight(mLogic->GetCameraHeight());
+    mInfoWidget->SetTiltAngle(mLogic->GetTiltAngle());
+    mInfoWidget->SetSensorWidth(mLogic->GetSensorWidth());
+    mInfoWidget->SetSensorHeight(mLogic->GetSensorHeight());
+    mInfoWidget->SetAspectRatio(mLogic->GetAspectRatio());
+    mInfoWidget->SetHorizontalFov(mLogic->GetHorizontalFov());
+    mInfoWidget->SetVerticalFov(mLogic->GetVerticalFov());
+    mInfoWidget->SetZNear(mLogic->GetZNear());
+    mInfoWidget->SetZFar(mLogic->GetZFar());
+    mInfoWidget->SetTargetHeight(mLogic->GetTargetHeight());
+    mInfoWidget->SetTargetDistance(mLogic->GetTargetDistance());
+    mInfoWidget->SetFovWidth(mLogic->GetFovWidth());
+    mInfoWidget->SetLowerBoundaryHeight(mLogic->GetLowerBoundaryHeight());
+    mInfoWidget->SetLowerBoundaryDistance(mLogic->GetLowerBoundaryDistance());
 }
 
 void FovCalculator::Controller::UpdateSideViewWidget()
@@ -167,19 +217,14 @@ void FovCalculator::Controller::OnWheelMoved(QWheelEvent* event)
     }
 }
 
-void FovCalculator::Controller::OnUserRequestsTargetDistanceChange(const QPointF& delta)
+void FovCalculator::Controller::OnUserRequestsTargetDistanceDeltaChange(const QPointF& delta)
 {
     float worldDelta = mConverter->ConvertDistanceFromGuiToWorld(delta.x());
     float newTargetDistance = mLogic->GetTargetDistance() + worldDelta;
-    if (0.1f < newTargetDistance)
-    {
-        float validatedTargetDistance = mLogic->ValidateTargetDistance(newTargetDistance);
-        mLogic->SetTargetDistance(validatedTargetDistance);
-        Update();
-    }
+    OnUserRequestsTargetDistanceChange(newTargetDistance);
 }
 
-void FovCalculator::Controller::OnUserRequestsFovWidthChange(float delta)
+void FovCalculator::Controller::OnUserRequestsFovWidthDeltaChange(float delta)
 {
     float worldDelta = mConverter->ConvertDistanceFromGuiToWorld(delta);
     float newFovWidth = mLogic->GetFovWidth() + worldDelta;
@@ -191,37 +236,76 @@ void FovCalculator::Controller::OnUserRequestsFovWidthChange(float delta)
     }
 }
 
-void FovCalculator::Controller::OnUserRequestsTargetHeightChange(const QPointF& delta)
+void FovCalculator::Controller::OnUserRequestsTargetHeightDeltaChange(const QPointF& delta)
 {
     float worldDelta = mConverter->ConvertDistanceFromGuiToWorld(-delta.y());
     float newTargetHeight = mLogic->GetTargetHeight() + worldDelta;
-    if (0.1f <= newTargetHeight)
-    {
-        float validatedTargetHeight = mLogic->ValidateTargetHeight(newTargetHeight);
-        mLogic->SetTargetHeight(validatedTargetHeight);
-        Update();
-    }
+    OnUserRequestsTargetHeightChange(newTargetHeight);
 }
 
-void FovCalculator::Controller::OnUserRequestsCameraHeightChange(const QPointF& delta)
+void FovCalculator::Controller::OnUserRequestsCameraHeightDeltaChange(const QPointF& delta)
 {
     float worldDelta = mConverter->ConvertDistanceFromGuiToWorld(-delta.y());
     float newCameraHeight = mLogic->GetCameraHeight() + worldDelta;
-    if (0.1f <= newCameraHeight)
+    OnUserRequestsCameraHeightChange(newCameraHeight);
+}
+
+void FovCalculator::Controller::OnUserRequestsLowerBoundaryHeightDeltaChange(const QPointF& delta)
+{
+    float worldDelta = mConverter->ConvertDistanceFromGuiToWorld(-delta.y());
+    float newLowerBoundaryHeight = mLogic->GetLowerBoundaryHeight() + worldDelta;
+    OnUserRequestsLowerBoundaryHeightChange(newLowerBoundaryHeight);
+}
+
+void FovCalculator::Controller::OnUserRequestsCameraHeightChange(float newHeight)
+{
+    if (0.1f <= newHeight)
     {
-        float validatedCameraHeight = mLogic->ValidateCameraHeight(newCameraHeight);
+        float validatedCameraHeight = mLogic->ValidateCameraHeight(newHeight);
         mLogic->SetCameraHeight(validatedCameraHeight);
         Update();
     }
 }
 
-void FovCalculator::Controller::OnUserRequestsLowerBoundaryHeightChange(const QPointF& delta)
+void FovCalculator::Controller::OnUserRequestsTargetHeightChange(float newHeight)
 {
-    float worldDelta = mConverter->ConvertDistanceFromGuiToWorld(-delta.y());
-    float newLowerBoundaryHeight = mLogic->GetLowerBoundaryHeight() + worldDelta;
-    float upperBound = qMin(mLogic->GetCameraHeight(), mLogic->GetTargetHeight()) - 0.01;
-    newLowerBoundaryHeight = qBound(0.0f, newLowerBoundaryHeight, upperBound);
+    if (0.1f <= newHeight)
+    {
+        float validatedTargetHeight = mLogic->ValidateTargetHeight(newHeight);
+        mLogic->SetTargetHeight(validatedTargetHeight);
+        Update();
+    }
+}
 
-    mLogic->SetLowerBoundaryHeight(newLowerBoundaryHeight);
+void FovCalculator::Controller::OnUserRequestsTargetDistanceChange(float newDistance)
+{
+    if (0.1f < newDistance)
+    {
+        float validatedTargetDistance = mLogic->ValidateTargetDistance(newDistance);
+        mLogic->SetTargetDistance(validatedTargetDistance);
+        Update();
+    }
+}
+
+void FovCalculator::Controller::OnUserRequestsLowerBoundaryHeightChange(float newHeight)
+{
+    float upperBound = qMin(mLogic->GetCameraHeight(), mLogic->GetTargetHeight()) - 0.01;
+    newHeight = qBound(0.0f, newHeight, upperBound);
+
+    mLogic->SetLowerBoundaryHeight(newHeight);
     Update();
+}
+
+void FovCalculator::Controller::OnMouseMoved(const QPointF& position)
+{
+    if (sender() == mTopViewWidget)
+    {
+        const auto worldPosition = mConverter->MapFromTopViewToWorld(position);
+        mInfoWidget->SetMousePosition(QPointF(worldPosition.x(), worldPosition.z()));
+    }
+    else if (sender() == mSideViewWidget)
+    {
+        const auto worldPosition = mConverter->MapFromSideViewToWorld(position);
+        mInfoWidget->SetMousePosition(QPointF(worldPosition.x(), worldPosition.z()));
+    }
 }

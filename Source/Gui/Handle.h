@@ -10,7 +10,7 @@ namespace FovCalculator
         Handle() = default;
 
         bool Contains(float x, float y);
-        bool Contains(const QPoint& point);
+        bool Contains(const QPointF& point);
 
         void Draw(QPaintDevice* device);
 

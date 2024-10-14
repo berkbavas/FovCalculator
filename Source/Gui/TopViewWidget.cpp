@@ -141,7 +141,6 @@ void FovCalculator::TopViewWidget::DrawHandles()
 void FovCalculator::TopViewWidget::DrawLabels()
 {
     QPainter painter(this);
-
     painter.setPen(SECONDARY_COLOR);
     painter.setFont(mLabelFont);
     QPointF point0(mTargetHandle.GetCenter().x() + 12, mTargetHandle.GetCenter().y() + mLabelFont.pixelSize() / 2);
@@ -169,16 +168,17 @@ void FovCalculator::TopViewWidget::UpdateCursor()
 
 void FovCalculator::TopViewWidget::mousePressEvent(QMouseEvent* event)
 {
+    QPointF mousePosition = event->position();
 
-    if (mTargetHandle.Contains(event->pos()))
+    if (mTargetHandle.Contains(mousePosition))
     {
         mTargetHandle.SetPressed(true);
     }
-    else if (mFovWidthHandleTop.Contains(event->pos()))
+    else if (mFovWidthHandleTop.Contains(mousePosition))
     {
         mFovWidthHandleTop.SetPressed(true);
     }
-    else if (mFovWidthHandleBottom.Contains(event->pos()))
+    else if (mFovWidthHandleBottom.Contains(mousePosition))
     {
         mFovWidthHandleBottom.SetPressed(true);
     }
@@ -187,35 +187,39 @@ void FovCalculator::TopViewWidget::mousePressEvent(QMouseEvent* event)
         mUserRequestsPan = true;
     }
 
-    mPreviousMousePosition = event->position();
+    mPreviousMousePosition = mousePosition;
     UpdateCursor();
     update();
 }
 
 void FovCalculator::TopViewWidget::mouseMoveEvent(QMouseEvent* event)
 {
-    mTargetHandle.SetHovered(mTargetHandle.Contains(event->pos()));
-    mFovWidthHandleTop.SetHovered(mFovWidthHandleTop.Contains(event->pos()));
-    mFovWidthHandleBottom.SetHovered(mFovWidthHandleBottom.Contains(event->pos()));
+    QPointF mousePosition = event->position();
 
-    QPointF delta = event->position() - mPreviousMousePosition;
+    mTargetHandle.SetHovered(mTargetHandle.Contains(mousePosition));
+    mFovWidthHandleTop.SetHovered(mFovWidthHandleTop.Contains(mousePosition));
+    mFovWidthHandleBottom.SetHovered(mFovWidthHandleBottom.Contains(mousePosition));
+
+    QPointF delta = mousePosition - mPreviousMousePosition;
 
     if (mTargetHandle.GetPressed())
     {
-        emit UserRequestsTargetDistanceChange(delta);
+        emit UserRequestsTargetDistanceDeltaChange(delta);
     }
     if (mFovWidthHandleTop.GetPressed() || mFovWidthHandleBottom.GetPressed())
     {
-        emit UserRequestsFovWidthChange(-2 * delta.y());
+        emit UserRequestsFovWidthDeltaChange(-2 * delta.y());
     }
     if (mUserRequestsPan)
     {
         emit UserRequestsPan(delta);
     }
 
-    mPreviousMousePosition = event->position();
+    mPreviousMousePosition = mousePosition;
     UpdateCursor();
     update();
+
+    emit MouseMoved(mousePosition);
 }
 
 void FovCalculator::TopViewWidget::mouseReleaseEvent(QMouseEvent*)

@@ -11,7 +11,7 @@
 FovCalculator::Window::Window(QWidget* parent)
     : QWidget(parent)
 {
-    mInfoWidget = new InfoWidget;
+    mInfoWidget = new InfoWidget(this);
     mTopViewWidget = new TopViewWidget(this);
     mSideViewWidget = new SideViewWidget(this);
 

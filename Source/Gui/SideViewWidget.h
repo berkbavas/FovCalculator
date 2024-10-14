@@ -21,10 +21,11 @@ namespace FovCalculator
       signals:
         void UserRequestsPan(const QPointF& delta);
         void WheelMoved(QWheelEvent* event);
-        void UserRequestsTargetHeightChange(const QPointF& delta);
-        void UserRequestsTargetDistanceChange(const QPointF& delta);
-        void UserRequestsCameraHeightChange(const QPointF& delta);
-        void UserRequestsLowerBoundaryHeightChange(const QPointF& delta);
+        void UserRequestsTargetHeightDeltaChange(const QPointF& delta);
+        void UserRequestsTargetDistanceDeltaChange(const QPointF& delta);
+        void UserRequestsCameraHeightDeltaChange(const QPointF& delta);
+        void UserRequestsLowerBoundaryHeightDeltaChange(const QPointF& delta);
+        void MouseMoved(const QPointF& position);
 
       private:
         void paintEvent(QPaintEvent* event) override;
@@ -65,7 +66,7 @@ namespace FovCalculator
         Handle mCameraHeightHandle;
         Handle mLowerBoundaryHandle;
 
-        QPoint mPreviousMousePosition;
+        QPointF mPreviousMousePosition;
         bool mUserRequestsPan{ false };
 
         QPen mDashedPen;
