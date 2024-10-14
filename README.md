@@ -14,4 +14,4 @@ Detection, observation, recognition and identification limit calculator based on
 10) Build & Run with `Release` configuration.
 
 ## Video
-https://github.com/user-attachments/assets/6d7efaa6-2fa3-41c8-96f7-4d3574774060
+https://github.com/user-attachments/assets/00f376d7-56a9-4999-aeeb-04ef076b29eb
