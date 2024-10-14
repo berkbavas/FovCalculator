@@ -24,7 +24,7 @@ FovCalculator::Window::Window(QWidget* parent)
     setLayout(mMainLayout);
 
     QPalette pal = QPalette();
-    pal.setColor(QPalette::Window, QColor(14, 14, 14));
+    pal.setColor(QPalette::Window, QColor(12, 12, 12));
     setAutoFillBackground(true);
     setPalette(pal);
 

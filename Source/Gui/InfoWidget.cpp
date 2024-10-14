@@ -27,7 +27,7 @@ void FovCalculator::InfoWidget::initializeGL()
 
 void FovCalculator::InfoWidget::paintGL()
 {
-    glClearColor(0.054, 0.054, 0.054, 1);
+    glClearColor(12.0 / 255, 12.0 / 255, 12.0 / 255, 1);
     glClear(GL_COLOR_BUFFER_BIT);
 
     QtImGui::newFrame();
