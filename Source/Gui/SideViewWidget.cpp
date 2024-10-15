@@ -188,7 +188,7 @@ void FovCalculator::SideViewWidget::DrawHorizontalAxis()
         if (qFuzzyCompare(integral, value))
             label = QString::number(value, 'f', 0);
         else
-            label = QString::number(value, 'f', 1);
+            label = QString::number(value, 'f', 2);
         QRectF boundingBox(x - 50, tickmark.y() + 12.5f, 100, mLabelFont.pixelSize());
         painter.drawText(boundingBox, Qt::AlignCenter, label);
     }
@@ -230,7 +230,7 @@ void FovCalculator::SideViewWidget::DrawVerticalAxis()
         if (qFuzzyCompare(integral, value))
             label = QString::number(value, 'f', 0);
         else
-            label = QString::number(value, 'f', 1);
+            label = QString::number(value, 'f', 2);
 
         QRectF boundingBox(mOrigin.x() - 110, tickmark.y() - 0.6 * mLabelFont.pixelSize(), 100, 1.125 * mLabelFont.pixelSize());
         painter.drawText(boundingBox, Qt::AlignRight, label);
