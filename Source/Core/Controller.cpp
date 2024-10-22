@@ -18,7 +18,6 @@ FovCalculator::Controller::Controller(QObject* parent)
     mSideViewWidget = mWindow->GetSideViewWidget();
     connect(mConverter, &Converter::GuiNeedsUpdate, this, &Controller::Update);
 
-    // connect(mInfoWidget, &InfoWidget::GuiNeedsUpdate, this, &Controller::Update);
     connect(mTopViewWidget, &TopViewWidget::UserRequestsPan, this, &Controller::OnUserRequestsPan);
     connect(mTopViewWidget, &TopViewWidget::UserRequestsTargetDistanceDeltaChange, this, &Controller::OnUserRequestsTargetDistanceDeltaChange);
     connect(mTopViewWidget, &TopViewWidget::UserRequestsFovWidthDeltaChange, this, &Controller::OnUserRequestsFovWidthDeltaChange);
