@@ -34,10 +34,13 @@ add_executable(FovCalculator ${SOURCES})
 target_link_libraries(FovCalculator Qt6::Core Qt6::Widgets Qt6::OpenGL Qt6::OpenGLWidgets ${LIBS})
 
 add_custom_command(TARGET FovCalculator
-POST_BUILD COMMAND xcopy /E /Y "\"$(SolutionDir)../Resources\"" "\"$(OutDir)Resources/*\"")
+    POST_BUILD COMMAND ${CMAKE_COMMAND}
+    -E copy_directory
+    "${CMAKE_SOURCE_DIR}/Resources/"
+    "$<TARGET_FILE_DIR:FovCalculator>/Resources/")
 
 add_custom_command(TARGET FovCalculator
-POST_BUILD COMMAND xcopy /E /Y "\"$(SolutionDir)../Resources\"" "\"$(BuildDir)Resources/*\"")
-
-add_custom_command(TARGET FovCalculator
-POST_BUILD COMMAND "$ENV{Qt6_DIR}/bin/windeployqt.exe" "\"$(OutDir)$(TargetName)$(TargetExt)\"")
+    POST_BUILD COMMAND
+    Qt6::windeployqt
+    --dir "$<TARGET_FILE_DIR:FovCalculator>"
+    "$<TARGET_FILE_DIR:FovCalculator>/$<TARGET_FILE_NAME:FovCalculator>")
