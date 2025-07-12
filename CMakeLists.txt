@@ -46,13 +46,6 @@ target_link_libraries(FovCalculator
 )
 
 add_custom_command(TARGET FovCalculator
-    POST_BUILD COMMAND ${CMAKE_COMMAND}
-    -E copy_directory
-    "${CMAKE_SOURCE_DIR}/Resources/"
-    "$<TARGET_FILE_DIR:FovCalculator>/Resources/"
-)
-
-add_custom_command(TARGET FovCalculator
     POST_BUILD COMMAND
     Qt6::windeployqt
     --dir "$<TARGET_FILE_DIR:FovCalculator>"
