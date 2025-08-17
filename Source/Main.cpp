@@ -6,8 +6,8 @@ int main(int argc, char* argv[])
 {
     QApplication app(argc, argv);
 
-    FovCalculator::Controller controller;
-    controller.Run();
+    FovCalculator::Controller* controller = new FovCalculator::Controller();
+    controller->Run();
 
     return app.exec();
 }

@@ -13,9 +13,9 @@ FovCalculator::Controller::Controller(QObject* parent)
     mWindow = new Window;
 
     mInfoWidget = mWindow->GetInfoWidget();
-
     mTopViewWidget = mWindow->GetTopViewWidget();
     mSideViewWidget = mWindow->GetSideViewWidget();
+    
     connect(mConverter, &Converter::GuiNeedsUpdate, this, &Controller::Update);
 
     connect(mTopViewWidget, &TopViewWidget::UserRequestsPan, this, &Controller::OnUserRequestsPan);

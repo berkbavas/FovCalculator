@@ -15,27 +15,27 @@ A Field of View (FOV) calculator for detection, observation, recognition, and id
 
 3. **Clone the repository:**
 
- ```sh
- git clone https://github.com/berkbavas/FovCalculator.git
- ```
+    ```sh
+    git clone https://github.com/berkbavas/FovCalculator.git
+    ```
 
 4. **Create and enter build directory:**
 
- ```sh
- mkdir build
- cd build
- ```
+    ```sh
+    mkdir build
+    cd build
+    ```
 
 5. **Configure project with CMake:**
 
- ```sh
- cmake ..
- ```
+    ```sh
+    cmake ..
+    ```
 
 6. **Open solution in Visual Studio:**
 
    - Open `FovCalculator.sln` in Visual Studio 2022
-   - Build and run in `Release` mode
+   - Build and run the project
 
 ## Demo Video
 

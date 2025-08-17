@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.25.1)
+
 project(FovCalculator VERSION 1.0.0 LANGUAGES CXX)
 
 set(CMAKE_PREFIX_PATH "$ENV{Qt6_DIR}")
@@ -10,32 +11,25 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INCLUDE_DIR 
-    Libs/qtimgui/include
-    Libs/Eigen
+set(LIBS_DIR        "${CMAKE_CURRENT_SOURCE_DIR}/Libs")
+set(QT_IMGUI_DIR    "${LIBS_DIR}/qtimgui")
+set(EIGEN_DIR       "${LIBS_DIR}/Eigen")
+set(INCLUDE_DIR     "${QT_IMGUI_DIR}/include" "${EIGEN_DIR}")
+set(LIBS_DIR        "${QT_IMGUI_DIR}/lib")
+set(LIBS
+    debug imguid                optimized imgui
+    debug qt_imgui_widgetsd     optimized qt_imgui_widgets
 )
 
-set(LIBS_DIR
-    Libs/qtimgui/lib
-    Libs/opencv-4.6.0/lib
-)
-
-set(LIBS    
-debug debug/imgui      
-debug debug/qt_imgui_widgets                
-optimized release/imgui
-optimized release/qt_imgui_widgets
-)
-
-file(GLOB_RECURSE SOURCES Source/*.cpp *.qrc)
+file(GLOB_RECURSE SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/*.qrc")
 
 find_package(Qt6 COMPONENTS Core Widgets Gui OpenGL OpenGLWidgets REQUIRED)
 
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/Source" ${INCLUDE_DIR})
-
-link_directories(${LIBS_DIR})
-
 add_executable(FovCalculator ${SOURCES})
+
+target_include_directories(FovCalculator PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/Source" ${INCLUDE_DIR})
+
+target_link_directories(FovCalculator PRIVATE ${LIBS_DIR})
 
 target_link_libraries(FovCalculator 
     Qt6::Core 

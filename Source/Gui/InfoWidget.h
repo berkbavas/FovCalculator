@@ -6,6 +6,8 @@
 #include <QOpenGLExtraFunctions>
 #include <QOpenGLWidget>
 
+#include <QtImGui.h>
+
 namespace FovCalculator
 {
     class Logic;
@@ -55,5 +57,7 @@ namespace FovCalculator
         DEFINE_MEMBER(float, LowerBoundaryDistance);
 
         DEFINE_MEMBER(QPointF, MousePosition);
+
+        QtImGui::RenderRef mRenderRef;
     };
 }

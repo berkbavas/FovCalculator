@@ -6,14 +6,13 @@
 #include <QDateTime>
 #include <QDebug>
 #include <QKeyEvent>
-#include <QtImGui.h>
+
 #include <imgui.h>
 
 FovCalculator::InfoWidget::InfoWidget(QWidget* parent)
     : QOpenGLWidget(parent)
 {
-    connect(this, &QOpenGLWidget::frameSwapped, [=]()
-            { update(); });
+    connect(this, &QOpenGLWidget::frameSwapped, [=]() { update(); });
 
     setFocusPolicy(Qt::ClickFocus);
 }
@@ -22,7 +21,7 @@ void FovCalculator::InfoWidget::initializeGL()
 {
     initializeOpenGLFunctions();
 
-    QtImGui::initialize(this);
+    mRenderRef = QtImGui::initialize(this, false);
 }
 
 void FovCalculator::InfoWidget::paintGL()
@@ -30,9 +29,9 @@ void FovCalculator::InfoWidget::paintGL()
     glClearColor(12.0 / 255, 12.0 / 255, 12.0 / 255, 1);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    QtImGui::newFrame();
+    QtImGui::newFrame(mRenderRef);
 
-    ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
+    ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f), ImGuiCond_FirstUseEver);
     ImGui::Begin("Debug", nullptr, ImGuiWindowFlags_NoBackground           //
                                        | ImGuiWindowFlags_NoMove           //
                                        | ImGuiWindowFlags_NoDecoration     //
@@ -58,51 +57,51 @@ void FovCalculator::InfoWidget::paintGL()
     ImGui::End();
 
     ImGui::Render();
-    QtImGui::render();
+    QtImGui::render(mRenderRef);
 }
 
 void FovCalculator::InfoWidget::DrawCameraInputs()
 {
     ImGui::Text("Camera");
 
-    if (ImGui::InputFloat("Camera Height (m)", &mCameraHeight, 0.1, 10, "%.3f", ImGuiInputTextFlags_EnterReturnsTrue))
+    if (ImGui::InputFloat("Camera Height (m)", &mCameraHeight, 0.1, 10, "%.3f"))
         emit CameraHeightChanged(mCameraHeight);
 
     ImGui::BeginDisabled();
     ImGui::InputFloat("Tilt Angle (°) ", &mTiltAngle);
     ImGui::EndDisabled();
 
-    if (ImGui::InputFloat("Sensor Width (px)", &mSensorWidth, 0.1, 10, "%.3f", ImGuiInputTextFlags_EnterReturnsTrue))
+    if (ImGui::InputFloat("Sensor Width (px)", &mSensorWidth, 0.1, 10, "%.3f"))
         emit SensorWidthChanged(mSensorWidth);
 
-    if (ImGui::InputFloat("Sensor Height (px)", &mSensorHeight, 0.1, 10, "%.3f", ImGuiInputTextFlags_EnterReturnsTrue))
+    if (ImGui::InputFloat("Sensor Height (px)", &mSensorHeight, 0.1, 10, "%.3f"))
         emit SensorHeightChanged(mSensorHeight);
 
     ImGui::BeginDisabled();
     ImGui::InputFloat("Aspect Ratio", &mAspectRatio);
     ImGui::EndDisabled();
 
-    if (ImGui::InputFloat("Horizontal Fov (°)", &mHorizontalFov, 0.1, 1, "%.3f", ImGuiInputTextFlags_EnterReturnsTrue))
+    if (ImGui::InputFloat("Horizontal Fov (°)", &mHorizontalFov, 0.1, 1, "%.3f"))
         emit HorizontalFovChanged(mHorizontalFov);
 
     ImGui::BeginDisabled();
     ImGui::InputFloat("Vertical Fov (°)", &mVerticalFov);
     ImGui::EndDisabled();
 
-    if (ImGui::InputFloat("Z Near (m)", &mZNear, 0.01, 1, "%.3f", ImGuiInputTextFlags_EnterReturnsTrue))
+    if (ImGui::InputFloat("Z Near (m)", &mZNear, 0.01, 1, "%.3f"))
         emit ZNearChanged(mZNear);
 
-    if (ImGui::InputFloat("Z Far (m)", &mZFar, 1, 10, "%.3f", ImGuiInputTextFlags_EnterReturnsTrue))
+    if (ImGui::InputFloat("Z Far (m)", &mZFar, 1, 10, "%.3f"))
         emit ZFarChanged(mZFar);
 }
 
 void FovCalculator::InfoWidget::DrawTargetInputs()
 {
     ImGui::Text("Target");
-    if (ImGui::InputFloat("Target Height (m)", &mTargetHeight, 0.1, 10, "%.3f", ImGuiInputTextFlags_EnterReturnsTrue))
+    if (ImGui::InputFloat("Target Height (m)", &mTargetHeight, 0.1, 10, "%.3f"))
         emit TargetHeightChanged(mTargetHeight);
 
-    if (ImGui::InputFloat("Target Distance (m)", &mTargetDistance, 0.1, 10, "%.3f", ImGuiInputTextFlags_EnterReturnsTrue))
+    if (ImGui::InputFloat("Target Distance (m)", &mTargetDistance, 0.1, 10, "%.3f"))
         emit TargetDistanceChanged(mTargetDistance);
 
     ImGui::BeginDisabled();
@@ -113,7 +112,7 @@ void FovCalculator::InfoWidget::DrawTargetInputs()
 void FovCalculator::InfoWidget::DrawLowerBoundaryInputs()
 {
     ImGui::Text("Lower Boundary");
-    if (ImGui::InputFloat("Height (m)##LowerBoundary", &mLowerBoundaryHeight, 0.1, 10, "%.3f", ImGuiInputTextFlags_EnterReturnsTrue))
+    if (ImGui::InputFloat("Height (m)##LowerBoundary", &mLowerBoundaryHeight, 0.1, 10, "%.3f"))
         emit LowerBoundaryHeightChanged(mLowerBoundaryHeight);
 
     ImGui::BeginDisabled();
