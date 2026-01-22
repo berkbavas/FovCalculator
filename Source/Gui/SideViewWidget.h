@@ -37,14 +37,13 @@ namespace FovCalculator
         void UpdateHandles();
         void DrawHorizontalAxis();
         void DrawVerticalAxis();
+        void DrawTickmarks();
         void DrawRegions();
         void DrawTargetStuff();
         void DrawTiltAngleStuff();
         void DrawHandlers();
 
         void UpdateCursor();
-
-        int FindSuitableTickmarkPixelStep(float meterToPixelRatio);
 
         DEFINE_MEMBER(QPointF, Origin);
         DEFINE_MEMBER(float, MeterToPixelRatio);
@@ -74,11 +73,7 @@ namespace FovCalculator
         QFont mLabelFont;
         QColor mLabelColor;
 
-        int mMinorTickmarkCount;
-        int mTickmarkPixelStep;
         QPen mAxisPen;
-        QSizeF mTickmarkSize;
-        QColor mTickmarkColor;
 
         QPolygonF mRegions[7];
     };

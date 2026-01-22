@@ -20,11 +20,8 @@ FovCalculator::SideViewWidget::SideViewWidget(QWidget* parent)
 
     mLabelColor = PRIMARY_COLOR;
 
-    mMinorTickmarkCount = 0;
     mAxisPen.setColor(PRIMARY_COLOR);
     mAxisPen.setWidthF(1.5f);
-    mTickmarkSize = QSizeF(1.5, 8);
-    mTickmarkColor = PRIMARY_COLOR;
 
     mTargetHeightHandle.SetBrush(QColor(127, 0, 0));
     mTargetHeightHandle.SetHoveredBrush(QColor(255, 255, 255));
@@ -52,11 +49,10 @@ FovCalculator::SideViewWidget::SideViewWidget(QWidget* parent)
 
 void FovCalculator::SideViewWidget::paintEvent(QPaintEvent* event)
 {
-    mTickmarkPixelStep = FindSuitableTickmarkPixelStep(mMeterToPixelRatio);
-
     UpdateHandles();
     DrawHorizontalAxis();
     DrawVerticalAxis();
+    DrawTickmarks();
     DrawRegions();
     DrawTargetStuff();
     DrawTiltAngleStuff();
@@ -161,37 +157,6 @@ void FovCalculator::SideViewWidget::DrawHorizontalAxis()
     painter.setPen(mAxisPen);
     QLine line = QLine(0, mOrigin.y(), width(), mOrigin.y());
     painter.drawLine(line);
-
-    QRectF tickmark = QRectF(0, 0, mTickmarkSize.width(), mTickmarkSize.height());
-
-    painter.setFont(mLabelFont);
-    painter.setPen(mLabelColor);
-
-    const QRectF originBoundingBox(mOrigin.x() - 8, mOrigin.y() - 8, 16, 16);
-
-    int start = mOrigin.x() - mTickmarkPixelStep * floor(mOrigin.x() / mTickmarkPixelStep);
-    int end = width();
-
-    // Main loop for tickmarks, labels, and minor tickmarks
-    for (int x = start; x < end; x += mTickmarkPixelStep)
-    {
-        tickmark.moveCenter(QPointF(x, mOrigin.y()));
-
-        if (originBoundingBox.intersects(tickmark))
-            continue;
-
-        painter.fillRect(tickmark, mTickmarkColor);
-        tickmark.moveCenter(QPointF(x, mOrigin.y()));
-        float value = (x - mOrigin.x()) / mMeterToPixelRatio;
-        float integral = (int) value;
-        QString label;
-        if (qFuzzyCompare(integral, value))
-            label = QString::number(value, 'f', 0);
-        else
-            label = QString::number(value, 'f', 2);
-        QRectF boundingBox(x - 50, tickmark.y() + 12.5f, 100, mLabelFont.pixelSize());
-        painter.drawText(boundingBox, Qt::AlignCenter, label);
-    }
 }
 
 void FovCalculator::SideViewWidget::DrawVerticalAxis()
@@ -202,38 +167,71 @@ void FovCalculator::SideViewWidget::DrawVerticalAxis()
     QLine line = QLine(mOrigin.x(), 0, mOrigin.x(), height());
     painter.setPen(mAxisPen);
     painter.drawLine(line);
+}
 
-    QRectF tickmark = QRectF(0, 0, mTickmarkSize.height(), mTickmarkSize.width());
+void FovCalculator::SideViewWidget::DrawTickmarks()
+{
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing, true);
+    painter.setPen(mAxisPen);
     painter.setFont(mLabelFont);
-    painter.setPen(mLabelColor);
 
-    const QRectF originBoundingBox(mOrigin.x() - 8, mOrigin.y() - 8, 16, 16);
+    constexpr int TICK_LENGTH = 5;
+    constexpr int LABEL_OFFSET = 3;
 
-    int start = mOrigin.y() - mTickmarkPixelStep * floor(mOrigin.y() / mTickmarkPixelStep);
-    int end = height();
+    // Calculate tick interval based on zoom level (mMeterToPixelRatio)
+    float tickIntervalMeters = 1.0f;
+    if (mMeterToPixelRatio < 5.0f)
+        tickIntervalMeters = 10.0f;
+    else if (mMeterToPixelRatio < 15.0f)
+        tickIntervalMeters = 5.0f;
+    else if (mMeterToPixelRatio < 40.0f)
+        tickIntervalMeters = 2.0f;
+    else if (mMeterToPixelRatio > 80.0f)
+        tickIntervalMeters = 0.5f;
 
-    // Main loop for tickmarks, labels, and minor tickmarks
-    for (int y = start; y < end; y += mTickmarkPixelStep)
+    float tickIntervalPixels = tickIntervalMeters * mMeterToPixelRatio;
+
+    // Horizontal axis tickmarks (distance)
+    // Positive direction (right of origin)
+    for (float x = mOrigin.x() + tickIntervalPixels; x < width(); x += tickIntervalPixels)
     {
-        tickmark.moveCenter(QPointF(mOrigin.x(), y));
+        painter.drawLine(QPointF(x, mOrigin.y() - TICK_LENGTH), QPointF(x, mOrigin.y() + TICK_LENGTH));
+        float meters = (x - mOrigin.x()) / mMeterToPixelRatio;
+        QString label = QString::number(meters, 'f', tickIntervalMeters < 1.0f ? 1 : 0);
+        QRectF textRect(x - 20, mOrigin.y() + TICK_LENGTH + LABEL_OFFSET, 40, mLabelFont.pixelSize() + 2);
+        painter.drawText(textRect, Qt::AlignCenter, label);
+    }
 
-        if (originBoundingBox.intersects(tickmark))
-            continue;
+    // Negative direction (left of origin)
+    for (float x = mOrigin.x() - tickIntervalPixels; x > 0; x -= tickIntervalPixels)
+    {
+        painter.drawLine(QPointF(x, mOrigin.y() - TICK_LENGTH), QPointF(x, mOrigin.y() + TICK_LENGTH));
+        float meters = (x - mOrigin.x()) / mMeterToPixelRatio;
+        QString label = QString::number(meters, 'f', tickIntervalMeters < 1.0f ? 1 : 0);
+        QRectF textRect(x - 20, mOrigin.y() + TICK_LENGTH + LABEL_OFFSET, 40, mLabelFont.pixelSize() + 2);
+        painter.drawText(textRect, Qt::AlignCenter, label);
+    }
 
-        painter.fillRect(tickmark, mTickmarkColor);
-        tickmark.moveCenter(QPointF(mOrigin.x(), y));
+    // Vertical axis tickmarks (height)
+    // Positive direction (above origin - going up means smaller y)
+    for (float y = mOrigin.y() - tickIntervalPixels; y > 0; y -= tickIntervalPixels)
+    {
+        painter.drawLine(QPointF(mOrigin.x() - TICK_LENGTH, y), QPointF(mOrigin.x() + TICK_LENGTH, y));
+        float meters = (mOrigin.y() - y) / mMeterToPixelRatio;
+        QString label = QString::number(meters, 'f', tickIntervalMeters < 1.0f ? 1 : 0);
+        QRectF textRect(mOrigin.x() - 35 - LABEL_OFFSET, y - mLabelFont.pixelSize() / 2, 30, mLabelFont.pixelSize() + 2);
+        painter.drawText(textRect, Qt::AlignRight | Qt::AlignVCenter, label);
+    }
 
-        float value = (mOrigin.y() - y) / mMeterToPixelRatio;
-        float integral = (int) value;
-
-        QString label;
-        if (qFuzzyCompare(integral, value))
-            label = QString::number(value, 'f', 0);
-        else
-            label = QString::number(value, 'f', 2);
-
-        QRectF boundingBox(mOrigin.x() - 110, tickmark.y() - 0.6 * mLabelFont.pixelSize(), 100, 1.125 * mLabelFont.pixelSize());
-        painter.drawText(boundingBox, Qt::AlignRight, label);
+    // Negative direction (below origin)
+    for (float y = mOrigin.y() + tickIntervalPixels; y < height(); y += tickIntervalPixels)
+    {
+        painter.drawLine(QPointF(mOrigin.x() - TICK_LENGTH, y), QPointF(mOrigin.x() + TICK_LENGTH, y));
+        float meters = (mOrigin.y() - y) / mMeterToPixelRatio;
+        QString label = QString::number(meters, 'f', tickIntervalMeters < 1.0f ? 1 : 0);
+        QRectF textRect(mOrigin.x() - 35 - LABEL_OFFSET, y - mLabelFont.pixelSize() / 2, 30, mLabelFont.pixelSize() + 2);
+        painter.drawText(textRect, Qt::AlignRight | Qt::AlignVCenter, label);
     }
 }
 
@@ -262,28 +260,6 @@ void FovCalculator::SideViewWidget::DrawHandlers()
     mTargetHeightHandle.Draw(this);
     mTargetDistanceHandle.Draw(this);
     mLowerBoundaryHandle.Draw(this);
-}
-
-int FovCalculator::SideViewWidget::FindSuitableTickmarkPixelStep(float meterToPixelRatio)
-{
-    float tickmarkMeterStep = 36 / meterToPixelRatio;
-
-    int powers = 0;
-
-    while (tickmarkMeterStep > 1)
-    {
-        tickmarkMeterStep = tickmarkMeterStep / 10.0f;
-        powers++;
-    }
-
-    if (tickmarkMeterStep <= 0.25)
-        return round(0.25f * pow(10, powers) * meterToPixelRatio);
-    else if (tickmarkMeterStep <= 0.5)
-        return round(0.5f * pow(10, powers) * meterToPixelRatio);
-    else if (tickmarkMeterStep <= 0.75)
-        return round(0.75f * pow(10, powers) * meterToPixelRatio);
-    else
-        return round(pow(10, powers) * meterToPixelRatio);
 }
 
 void FovCalculator::SideViewWidget::mousePressEvent(QMouseEvent* event)
